@@ -1,1397 +1,673 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="12-Month Engine">
-<title>The 12-Month Engine</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gurugram House Hunt — Shubham</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  :root { --ink:#16233b; --panel:#fff; --line:#dfe4ec; --accent:#c8401a; --muted:#5a6579;
+          --pros:#eef7ee; --pros-b:#3a8a4a; --cons:#fbf1f0; --cons-b:#b8493d;
+          --verify:#fff8e6; --verify-b:#d9a441; --conn:#eef3fb; --conn-b:#3a6ea5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; overscroll-behavior: none; }
+  #app { display: flex; flex-direction: column; height: 100dvh; }
 
-html, body { margin: 0; padding: 0; background: #1A2024; }
-* { box-sizing: border-box; }
+  header { background: var(--ink); color: #fff; padding: 10px 14px; display: flex; align-items: center;
+    justify-content: space-between; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+  header h1 { font-size: 15px; font-weight: 600; }
+  header .sub { font-size: 10.5px; color: #b9c2d4; }
+  .btn { background: #2b3b5c; border: 1px solid #40527a; color: #fff; font-size: 12px; padding: 8px 14px;
+    border-radius: 8px; cursor: pointer; min-height: 38px; }
+  .btn:active { background: #374970; }
+  .btn.accent { background: var(--accent); border-color: var(--accent); }
 
-.app {
-  --bg: #1A2024;
-  --surface: #232A2F;
-  --surface2: #2A3238;
-  --border: rgba(255,255,255,0.08);
-  --text: #E4E9EA;
-  --text-secondary: #94A3A8;
-  --text-tertiary: #66757A;
-  --accent: #74A6A0;
-  --accent-ink: #142023;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 14px 16px 56px;
-  min-height: 100vh;
-}
-@media (prefers-reduced-motion: reduce) { .app * { transition: none !important; animation: none !important; } }
-.app *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #stats { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #fff;
+    border-bottom: 1px solid var(--line); flex-shrink: 0; scrollbar-width: none; }
+  #stats::-webkit-scrollbar { display: none; }
+  .stat { flex: 0 0 auto; padding: 8px 16px; border-right: 1px solid var(--line); text-align: center; min-width: 84px; }
+  .stat .num { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .stat .lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
 
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex: 1; overflow-x: auto; white-space: nowrap; }
-.tabs button { background: none; border: none; color: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; letter-spacing: 0.03em; padding: 9px 3px; margin-right: 12px; cursor: pointer; border-bottom: 2px solid transparent; flex-shrink: 0; }
-.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
-.save-status { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--text-tertiary); white-space: nowrap; padding-left: 8px; }
+  #chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px; background: var(--panel);
+    border-bottom: 1px solid var(--line); flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; border: 1.5px solid var(--line); border-radius: 18px; background: #fff; font-size: 12.5px;
+    padding: 7px 12px; cursor: pointer; color: var(--muted); white-space: nowrap; min-height: 36px; }
+  .chip.on { border-color: var(--ink); background: var(--ink); color: #fff; }
 
-.eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--text-tertiary); }
-.hdr { margin: 18px 0 18px; }
-.hdr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.mve-toggle { font-family: "IBM Plex Mono", monospace; font-size: 11px; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
-.mve-toggle.active { color: var(--accent); border-color: var(--accent); }
-.hdr-main { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.hdr-main h1 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 26px; margin: 0; }
-.quarter-badge { font-family: "IBM Plex Mono", monospace; font-size: 11px; border: 1px solid; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
-.month-theme { color: var(--text-secondary); font-size: 13px; margin: 4px 0 12px; font-style: italic; }
+  #filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 12px; background: #fbfcfe;
+    border-bottom: 1px solid var(--line); flex-shrink: 0; font-size: 12px; color: var(--ink); }
+  #filters label { display: flex; align-items: center; gap: 6px; }
+  #rentVal { font-weight: 700; color: var(--accent); }
+  input[type="range"] { width: 110px; }
+  #searchBox { flex: 1; min-width: 140px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; }
 
-.odometer { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-bottom: 14px; }
-.odo-seg { height: 6px; border-radius: 2px; }
+  #main { flex: 1; display: flex; min-height: 0; }
+  #map { flex: 1; min-height: 0; }
 
-.day-nav { display: flex; align-items: center; gap: 10px; }
-.day-nav button { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 6px 10px; cursor: pointer; font-size: 16px; line-height: 1; }
-.day-nav button:disabled { opacity: 0.35; cursor: default; }
-.day-label { flex: 1; display: flex; flex-direction: column; }
-.day-name { font-size: 14px; font-weight: 600; }
-.day-date { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); }
-.jump-today { font-family: "IBM Plex Mono", monospace; font-size: 11px !important; padding: 5px 9px !important; color: var(--accent); }
+  #sidebar { width: 320px; background: var(--panel); border-left: 1px solid var(--line); display: none;
+    flex-direction: column; min-height: 0; }
+  #sidebar h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 14px 4px; }
+  #sideHouseStatus { font-size: 11px; color: var(--muted); padding: 0 14px 6px; }
+  #sideHouseList { overflow-y: auto; padding: 0 10px 6px; max-height: 46%; }
+  #activityFeed { overflow-y: auto; padding: 0 14px 12px; font-size: 11.5px; border-top: 1px solid var(--line); }
+  .activity-row { padding: 5px 0; border-bottom: 1px dashed var(--line); color: var(--muted); }
+  .activity-row b { color: var(--ink); }
 
-.banner { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; }
-.banner p { margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.banner button { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 5px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  #drawer { background: var(--panel); border-top: 1px solid var(--line); flex-shrink: 0; max-height: 40dvh;
+    display: flex; flex-direction: column; }
+  #drawerHead { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; cursor: pointer; user-select: none; }
+  #drawerHead h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  #drawerHead .caret { font-size: 12px; color: var(--muted); }
+  #houseStatus { font-size: 11px; color: var(--muted); padding: 0 14px 6px; }
+  #houseList { overflow-y: auto; padding: 0 10px 12px; }
+  #drawer.collapsed #houseList, #drawer.collapsed #houseStatus { display: none; }
 
-.section { margin-bottom: 22px; }
-.section-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
-.section-title { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-secondary); }
-.section-count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--accent); }
-.empty { color: var(--text-tertiary); font-size: 13px; font-style: italic; margin: 4px 0; }
-.hint { color: var(--text-tertiary); font-size: 11px; margin-top: 8px; }
+  .house-item { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 6px 0;
+    font-size: 13px; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+  .house-item:active, .house-item:hover { border-color: var(--ink); background: #f6f8fb; }
+  .house-item .thumb { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: #eee; }
+  .house-item .body { flex: 1; min-width: 0; }
+  .house-item .name { font-weight: 600; color: var(--ink); }
+  .house-item .meta { color: var(--muted); margin-top: 2px; font-size: 11.5px; }
+  .status-pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px;
+    color: #fff; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .score-ring { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
 
-.rows { display: flex; flex-direction: column; gap: 1px; }
-.task-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 6px; background: var(--surface); margin-bottom: 4px; }
-.task-row.readonly { opacity: 0.6; }
-.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-.task-main { flex: 1; min-width: 0; }
-.task-label { font-size: 13.5px; line-height: 1.35; }
-.task-notes { font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
-.pill { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); background: var(--surface2); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
-.pill-on { color: var(--accent-ink); background: var(--accent); }
-.task-control { flex-shrink: 0; }
-.chk { width: 19px; height: 19px; accent-color: var(--accent); cursor: pointer; }
-.num-wrap { display: flex; align-items: center; gap: 4px; }
-.num { width: 64px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); padding: 5px 7px; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
-.unit { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
-.step-btn { width: 26px; height: 26px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.step-btn:active { background: var(--accent); color: var(--accent-ink); }
+  .pin { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  .pin.office { width: 38px; height: 38px; font-size: 20px; }
+  .sector-wrap { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .sector-wrap .rank { font-size: 10px; font-weight: 700; color: #fff; border-radius: 9px; padding: 1px 7px;
+    border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .sector-wrap .em { text-shadow: 0 1px 3px rgba(0,0,0,0.35); }
 
-.task-row.scale-task { flex-direction: column; align-items: stretch; gap: 8px; }
-.task-row-top { display: flex; align-items: center; gap: 10px; }
-.scale-row { display: flex; gap: 4px; flex-wrap: wrap; padding-left: 17px; }
-.scale-btn { width: 24px; height: 24px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 10px; cursor: pointer; }
-.scale-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .leaflet-popup-content { font-size: 12.5px; line-height: 1.45; margin: 10px 12px; max-width: 250px; }
+  .leaflet-popup-content b { color: var(--ink); }
+  .pop-tag { font-size: 11px; color: var(--muted); }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .card-stars { color: #d9a441; font-size: 13px; margin-bottom: 4px; }
+  .box { border-radius: 6px; padding: 6px 8px; margin: 4px 0; font-size: 11.5px; }
+  .box.pros { background: var(--pros); border-left: 3px solid var(--pros-b); }
+  .box.cons { background: var(--cons); border-left: 3px solid var(--cons-b); }
+  .box.verify { background: var(--verify); border-left: 3px solid var(--verify-b); }
+  .box.conn { background: var(--conn); border-left: 3px solid var(--conn-b); }
+  .box b { display: block; margin-bottom: 2px; }
+  .box ul { margin: 0; padding-left: 14px; }
+  .house-photo { width: 100%; border-radius: 6px; margin-bottom: 6px; max-height: 130px; object-fit: cover; }
+  .spider-label { background: #fff; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 10.5px; color: var(--ink); font-weight: 600; }
 
-.task-row.book-task { flex-direction: column; align-items: stretch; gap: 4px; }
-.book-track { position: relative; height: 6px; background: var(--surface2); border-radius: 3px; margin: 6px 0 2px 17px; overflow: hidden; }
-.book-track-fill { height: 100%; background: var(--accent); border-radius: 3px; }
-.book-track-target { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); }
-.book-pace { padding-left: 17px; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); }
-.pace-ahead { color: #8BAF7E; }
-.pace-behind { color: #C97D6E; }
-.pace-ontrack { color: var(--accent); }
-
-.book-setup-form { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.book-setup-form .row2 { display: flex; gap: 8px; }
-.book-setup-preview { background: var(--surface); border-radius: 6px; padding: 8px 10px; }
-.book-pace-label { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); margin-bottom: 2px; }
-.book-setup-preview .book-track { margin-left: 0; }
-.book-setup-preview .book-pace { padding-left: 0; }
-.book-setup-preview-actions { display: flex; gap: 14px; margin-top: 6px; }
-.link-btn { background: none; border: none; padding: 0; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--accent); cursor: pointer; text-decoration: underline; }
-.link-btn.danger { color: #C97D6E; }
-
-.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.heat-cell { aspect-ratio: 1; border-radius: 2px; }
-.heat-head { text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--text-tertiary); }
-
-.linechart { width: 100%; height: auto; display: block; }
-.chart-label { font-family: "IBM Plex Mono", monospace; font-size: 9px; fill: #6E6A5F; }
-
-.stat-row { display: flex; align-items: center; gap: 10px; padding: 7px 4px; }
-.stat-main { flex: 1; }
-.stat-label { font-size: 12.5px; margin-bottom: 4px; }
-.stat-bar-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-.stat-bar-fill { height: 100%; border-radius: 3px; }
-.stat-pct { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); width: 36px; text-align: right; }
-
-.select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13px; width: 100%; }
-.input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13px; width: 100%; }
-
-.filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; align-items: center; }
-.chip { font-family: "IBM Plex Mono", monospace; font-size: 11px; background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
-.chip.on { color: var(--accent); border-color: var(--accent); }
-.chip-static { font-family: "IBM Plex Mono", monospace; font-size: 10px; background: var(--surface2); color: var(--text-tertiary); border-radius: 999px; padding: 2px 8px; }
-.add-btn { margin-left: auto; }
-
-.btn-primary { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
-
-.form-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 16px; }
-.form-row { margin-bottom: 12px; }
-.form-row label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; font-family: "IBM Plex Mono", monospace; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.weekday-picker { display: flex; gap: 5px; flex-wrap: wrap; }
-.wd-btn { font-family: "IBM Plex Mono", monospace; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 5px; padding: 5px 9px; cursor: pointer; }
-.wd-btn.on { color: var(--accent); border-color: var(--accent); }
-.month-window { display: flex; flex-direction: column; gap: 8px; }
-.always-check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-secondary); }
-.month-selects { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
-.month-selects .select { width: auto; }
-.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
-
-.manage-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 6px; background: var(--surface); margin-bottom: 4px; }
-.manage-main { flex: 1; min-width: 0; }
-.manage-label { font-size: 13px; margin-bottom: 4px; }
-.manage-meta { display: flex; gap: 5px; flex-wrap: wrap; }
-.icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 5px; color: var(--text-secondary); padding: 5px 9px; cursor: pointer; font-size: 13px; line-height: 1; }
-.icon-btn.danger:hover { color: #C97D6E; border-color: #C97D6E; }
+  @media (min-width: 900px) {
+    #sidebar { display: flex; }
+    #drawer { display: none; }
+    header h1 { font-size: 17px; }
+  }
 </style>
 </head>
 <body>
-<div id="app" class="app">
-  <div class="topbar">
-    <nav class="tabs">
-      <button data-tab="today" class="on">Today</button>
-      <button data-tab="workout">Workout</button>
-      <button data-tab="week">Week</button>
-      <button data-tab="month">Month</button>
-      <button data-tab="trends">Trends</button>
-      <button data-tab="manage">Manage</button>
-    </nav>
-    <span id="save-status" class="save-status"></span>
+<div id="app">
+  <header>
+    <div>
+      <h1>🏠 Gurugram House Hunt</h1>
+      <div class="sub">🏢 Anchor: Rockwell Automation · DLF Cyber Hub</div>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn accent" id="addHouseBtn">＋ Add house</button>
+      <button class="btn" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div id="stats"></div>
+  <div id="chips"></div>
+  <div id="filters">
+    <input id="searchBox" placeholder="🔎 Search name, area, broker…">
+    <label>💰 Max rent <input type="range" id="rentSlider" min="15000" max="60000" step="1000" value="60000"><span id="rentVal">₹60,000</span></label>
+    <label><input type="checkbox" id="hideRejected"> 🙈 Hide rejected</label>
   </div>
-  <main id="root"><p class="empty">Loading your log…</p></main>
+
+  <div id="main">
+    <div id="map"></div>
+    <aside id="sidebar">
+      <h2>🏠 Houses tracked</h2>
+      <div id="sideHouseStatus">Loading…</div>
+      <div id="sideHouseList"></div>
+      <h2>🕓 Recent activity</h2>
+      <div id="activityFeed"></div>
+    </aside>
+  </div>
+
+  <div id="drawer" class="collapsed">
+    <div id="drawerHead"><h2>🏠 Houses tracked</h2><span class="caret" id="drawerCaret">▲ show</span></div>
+    <div id="houseStatus">Loading…</div>
+    <div id="houseList"></div>
+  </div>
 </div>
 
 <script>
-/* ============================== CONSTANTS ============================== */
+/* ================= CONFIG ================= */
+const HOUSES_CSV_URL = "";
+const GOOGLE_FORM_URL = ""; // paste your Google Form share link here for the "+ Add house" button
 
-const ACCENT = "#74A6A0";
+/* Optional: paste a free OpenRouteService API key (openrouteservice.org/dev/#/signup,
+   2000 req/day free, no card needed) to switch from straight-line distance to real
+   driving time. Leave "" to keep straight-line — nothing else breaks either way. */
+const ORS_API_KEY = "";
 
-const CATEGORIES = {
-  career: { label: "Career", color: "#7DA0C4" },
-  health: { label: "Health", color: "#8BAF7E" },
-  workout: { label: "Workout", color: "#6FA8A6" },
-  finance: { label: "Finance", color: "#D2AD6E" },
-  relationship: { label: "Relationship", color: "#C98F72" },
-  family: { label: "Family", color: "#B093BE" },
-  inner: { label: "Inner", color: "#9C97B8" },
-  learning: { label: "Learning", color: "#A39C87" },
+/* Scoring weights — must sum to 100. Adjust to match what actually matters to you. */
+const SCORE_WEIGHTS = { rCommute:20, rSafety:25, rPreschool:20, rParking:15, rVentilation:5, rRentValue:5, rSociety:10 };
+
+/* Sheet column order (see updated Form field list):
+   Timestamp | Name | Area | Coordinates | Rent | Sqft | Furnishing | Maintenance |
+   Contact | Notes | Status | Photo URL |
+   Rating: Commute | Rating: Safety | Rating: Preschool | Rating: Parking |
+   Rating: Ventilation | Rating: Rent value | Rating: Society               */
+
+const OFFICE = { name: "Rockwell Automation (DLF Cyber Hub)", lat: 28.4950, lng: 77.0890 };
+const RANK_COLORS = { 1:"#0f4d2e", 2:"#2e8b57", 3:"#6cb479", 4:"#c9a227", 5:"#d9852b", 6:"#a9502f" };
+const RANK_WEIGHT = { 1:4, 2:3, 3:2.5, 4:2, 5:2, 6:1.5 };
+const RANK_OPACITY = { 1:0.28, 2:0.22, 3:0.18, 4:0.15, 5:0.13, 6:0.10 };
+/* confidence: "verified" (you've visited & checked in person), "research" (desktop-only,
+   thorough), "unvalidated" (mostly assumptions). Update as you actually visit each area. */
+const CONFIDENCE = {
+  verified:    { label:"🟢 Verified",          color:"#1b7a3d" },
+  research:    { label:"🟡 Research complete", color:"#c9a227" },
+  unvalidated: { label:"🔴 Needs validation",  color:"#b8493d" }
 };
 
-const QUARTERS = {
-  1: { name: "Reset & Target", color: "#3E7C6A" },
-  2: { name: "Build & Apply", color: "#B5872E" },
-  3: { name: "Land & Elevate", color: "#3B4F68" },
-  4: { name: "Compound", color: "#4C7556" },
-};
-
-const MONTHS = [
-  { n: 1, label: "Jul 2026", full: "July 2026", theme: "Reset (light month)", quarter: 1 },
-  { n: 2, label: "Aug 2026", full: "August 2026", theme: "Foundation", quarter: 1 },
-  { n: 3, label: "Sep 2026", full: "September 2026", theme: "Sharpen", quarter: 1 },
-  { n: 4, label: "Oct 2026", full: "October 2026", theme: "Apply with force", quarter: 2 },
-  { n: 5, label: "Nov 2026", full: "November 2026", theme: "Interview reps", quarter: 2 },
-  { n: 6, label: "Dec 2026", full: "December 2026", theme: "Close the year clean", quarter: 2 },
-  { n: 7, label: "Jan 2027", full: "January 2027", theme: "Convert", quarter: 3 },
-  { n: 8, label: "Feb 2027", full: "February 2027", theme: "Land & onboard / step up", quarter: 3 },
-  { n: 9, label: "Mar 2027", full: "March 2027", theme: "Benchmark", quarter: 3 },
-  { n: 10, label: "Apr 2027", full: "April 2027", theme: "Consolidate", quarter: 4 },
-  { n: 11, label: "May 2027", full: "May 2027", theme: "Deepen", quarter: 4 },
-  { n: 12, label: "Jun 2027", full: "June 2027", theme: "The reckoning", quarter: 4 },
+const SECTORS = [
+  { rank:1, name:"Unitech Greenwood City, Sector 45", lat:28.4442, lng:77.0670, radiusM:750, stars:4, confidence:"research",
+    pros:["₹35K live listing inside named gated society","Realistic pricing for a plotted township","Shortest EuroKids commute"],
+    cons:["Longest, least predictable office commute (up to 45 min)","Parking often lacks dedicated stilt space"],
+    verify:["Confirm stilt vs. tandem parking for the specific unit","Check curbside congestion on the lane ~8 PM"],
+    conn:["🚇 Millennium City Centre ~1-1.6km","🏥 Max, Fortis, Paras 2-3km","✈️ ~20-25 min to IGI"] },
+  { rank:2, name:"Sushant Lok Phase 1", lat:28.4660, lng:77.0740, radiusM:900, stars:4, confidence:"research",
+    pros:["Highest overall rating (4.4/5) of anywhere reviewed","Most in-budget listings found (10)","Centered on Galleria Market"],
+    cons:["Almost all in-budget stock is standalone floors, not gated","Thin police patrolling reported","Gates back up with cabs/deliveries at peak"],
+    verify:["Ask for gated RWA block or stilt parking, skip premium towers","Drive past after 9 PM to check lighting","Ask guard about lane waterlogging history"],
+    conn:["🚇 HUDA City Centre ~900m","🏥 Fortis, Max, Paras 2-3km","✈️ ~15km, 25-30 min"] },
+  { rank:3, name:"Palam Vihar (Pocket C/E)", lat:28.5100, lng:77.0330, radiusM:1000, stars:3.5, confidence:"unvalidated",
+    pros:["Genuinely gated pockets, large internal parks","Bypasses worst NH-48 traffic","Closest shortlisted area to airport"],
+    cons:["No metro station within easy reach today","Rent range not yet independently verified"],
+    verify:["Ask security how backed up the gate gets 8:30-9:30 AM"],
+    conn:["🚇 No station nearby yet — planned corridor not operational","🏥 Columbia Asia + Metro Hospital on-site","✈️ ~12-15km, closest option"] },
+  { rank:4, name:"Malibu Town, Sector 47", lat:28.4292, lng:77.0480, radiusM:700, stars:3.5, confidence:"unvalidated",
+    pros:["Fully gated, American-style township","Multiple preschools inside/outside township"],
+    cons:["Longest commute of shortlisted options (~25 min)","No direct metro; parking issues reported","Stray dog packs near boundary walls at night"],
+    verify:["Ask residents about stray dogs near boundary at night","Check parking availability directly"],
+    conn:["🚇 Millennium City Centre ~5.2km","🏥 Park, Artemis nearby","✈️ ~25km"] },
+  { rank:5, name:"Sector 55/56 builder floors", lat:28.4260, lng:77.0975, radiusM:800, stars:3, confidence:"unvalidated",
+    pros:["Rapid Metro directly adjacent — traffic-free commute","Newer RWA lines avoid old CGHS maintenance issues"],
+    cons:["Older stock (Kendriya/Rail Vihar) has burglary + waterlogging reports","Poor lighting under elevated tracks in pockets"],
+    verify:["Drive past after 9 PM for dark patches under tracks","Ask specifically for newer RWA lines, not Kendriya/Rail Vihar"],
+    conn:["🚇 Sector 55-56 Rapid Metro — adjacent","🏥 Marengo, Cloudnine, Anand Multispeciality","✈️ ~18-20km (estimate)"] },
+  { rank:6, name:"South City I, Sector 41", lat:28.4560, lng:77.0630, radiusM:800, stars:3, confidence:"research",
+    pros:["Most consistent commute time of all options","RWA lanes can realistically hit ₹35K"],
+    cons:["The Palms/Retreat tower listings carry bait-listing risk (same as Richmond Park)","Basic inner markets vs. DLF areas"],
+    verify:["Tell brokers: gated RWA block only, not high-rise towers","Ask guard about waterlogging + dewatering pumps"],
+    conn:["🚇 HUDA City Centre ~15 min walk","🏥 Fortis, Artemis, Max, Medanta 3-5km","✈️ ~15km"] },
 ];
 
-const WEEKDAYS = [
-  { i: 1, l: "Mon" }, { i: 2, l: "Tue" }, { i: 3, l: "Wed" }, { i: 4, l: "Thu" },
-  { i: 5, l: "Fri" }, { i: 6, l: "Sat" }, { i: 0, l: "Sun" },
+const EUROKIDS = [
+  { name:"EuroKids Sector 84", lat:28.3975, lng:76.9538, note:"Curriculum inspired by Harvard's Project Zero" },
+  { name:"EuroKids Sector 21", lat:28.5064, lng:77.0673, note:"Active daycare facilities" },
+  { name:"EuroKids Dwarka Expressway (Sector 106)", lat:28.4952, lng:76.9921, note:"Spacious Montessori setup" },
+  { name:"EuroKids Sector 37C", lat:28.4552, lng:76.9794, note:"CCTV-enabled campus next to Taksila Heights" },
+  { name:"EuroKids Sector 52 (Ardee City)", lat:28.4358, lng:77.0811, note:"Play-based learning" },
+  { name:"EuroKids Sushant Lok 1 (Sector 28)", lat:28.4689, lng:77.0874, note:"Personalized individual attention" },
+  { name:"EuroKids Sector 86 (Badha)", lat:28.4014, lng:76.9422, note:"Ample open outdoor space" },
+  { name:"EuroKids Sector 50 (Nirvana Country)", lat:28.4162, lng:77.0628, note:"Near Fresco residential complex" },
+  { name:"EuroKids New Palam Vihar Phase 2 (Sector 112)", lat:28.5147, lng:77.0143, note:"Visual thinking curriculum" },
+  { name:"EuroKids Sector 46 (Huda Colony)", lat:28.4419, lng:77.0583, note:"Deep within Huda Colony" },
 ];
-
-const MVE_IDS = ["d-morning", "d-reading", "d-lightsout"];
-
-// Logical daily-routine order for Today's DAILY ENGINE list (Sleep/Water/Workout
-// are pulled out as their own anchor rows elsewhere in renderToday, so this only
-// covers the rest). Anything not listed here keeps its existing relative order,
-// appended at the end — new daily tasks won't silently vanish, they just won't
-// be specially placed until added here.
-const TODAY_ROUTINE_ORDER = [
-  "d-morning", "kr-balance",
-  "fam-papa-mon", "fam-papa-tue", "fam-papa-wed", "fam-papa-thu", "fam-papa-fri", "fam-papa-sat", "fam-papa-sun",
-  "d-reading", "d-lightsout",
+const SCHOOLS = [
+  { name:"DPS, Sector 45 — AAAAA · ₹1.35L/yr", lat:28.4460, lng:77.0700 },
+  { name:"GEMS International, Palam Vihar — AAAA+ · ~₹1.2-1.6L/yr", lat:28.5115, lng:77.0340 },
+  { name:"Amity International, Sector 46 — AAAAA · ~₹1.4-1.5L/yr", lat:28.4410, lng:77.0630 },
+  { name:"Lotus Valley Intl, Nirvana Country — AAAAA · ₹1.74L/yr", lat:28.4185, lng:77.0510 },
+  { name:"Ridge Valley School, DLF Phase IV — AAAA · ₹2.61L/yr", lat:28.4630, lng:77.0940 },
+  { name:"DPS, Sushant Lok — AAAAA · ~₹2.25L/yr", lat:28.4680, lng:77.0760 },
 ];
-function sortByRoutineOrder_(tasks) {
-  const rank = (id) => { const i = TODAY_ROUTINE_ORDER.indexOf(id); return i === -1 ? TODAY_ROUTINE_ORDER.length + 1 : i; };
-  return tasks.map((t, i) => ({ t, i })).sort((a, b) => (rank(a.t.id) - rank(b.t.id)) || (a.i - b.i)).map((x) => x.t);
-}
-const ROADMAP_START = new Date(2026, 6, 1);
-const RECURRENCE_OPTIONS = ["daily", "weekly", "monthly", "quarterly"];
-const EMPTY_FORM = { label: "", notes: "", category: "career", recurrence: "daily", inputType: "check", unit: "", target: 1, aggregate: "sum", activeDays: null, startMonth: "", endMonth: "", useDates: false, startDateVal: "", endDateVal: "", stepSize: "", bookMode: "percent", bookStart: "", bookEnd: "" };
+const METRO = [
+  { name:"Millennium City Centre (Yellow Line)", lat:28.4593, lng:77.0727 },
+  { name:"IFFCO Chowk (Yellow Line)", lat:28.4722, lng:77.0722 },
+  { name:"MG Road (Yellow Line)", lat:28.4795, lng:77.0800 },
+  { name:"Sector 42-43 (Rapid Metro)", lat:28.4530, lng:77.0930 },
+  { name:"Sector 55-56 (Rapid Metro)", lat:28.4238, lng:77.0975 },
+  { name:"Sector 53-54 (Rapid Metro)", lat:28.4415, lng:77.1035 },
+];
+const HOSPITALS = [
+  { name:"Fortis Memorial Research Institute", lat:28.4574, lng:77.0724 },
+  { name:"Medanta – The Medicity", lat:28.4400, lng:77.0410 },
+  { name:"Artemis Hospital (Sector 51)", lat:28.4394, lng:77.0720 },
+  { name:"Max Hospital (Sushant Lok)", lat:28.4670, lng:77.0790 },
+  { name:"Park Hospital (Sohna Road)", lat:28.4230, lng:77.0440 },
+  { name:"Columbia Asia / Metro Hospital (Palam Vihar)", lat:28.5110, lng:77.0300 },
+];
+const AIRPORT_RAIL = [
+  { name:"IGI Airport (T3)", lat:28.5562, lng:77.1000, em:"✈️" },
+  { name:"Gurgaon Railway Station", lat:28.4601, lng:76.9986, em:"🚂" },
+];
+const MARKETS = [
+  { name:"Galleria Market", lat:28.4675, lng:77.0805 },
+  { name:"HUDA Market Sector 56", lat:28.4245, lng:77.1000 },
+];
+const PARKS = [
+  { name:"Leisure Valley Park (Sector 29)", lat:28.4610, lng:77.0660 },
+  { name:"Tau Devi Lal Bio Diversity Park", lat:28.4500, lng:77.0530 },
+  { name:"Aravalli Biodiversity Park", lat:28.4790, lng:77.0980 },
+];
+/* ============== END CONFIG ============== */
 
-/* ============================== STATE ============================== */
-
-const APP = {
-  config: [], log: {}, tab: "today", selected: new Date(), mveMode: false, ready: false,
-  manageFilter: "all", trendsMetricId: "", trendsShowAvg: false,
-  editingBookRangeFor: null, bookRangeForm: { start: "", end: "" },
-  form: { open: false, editingId: null, data: Object.assign({}, EMPTY_FORM) },
+/* ---- distanceProvider abstraction ----
+   If ORS_API_KEY is set, uses real driving time (cached per pair, async).
+   Falls back to straight-line haversine instantly if no key or on any error —
+   callers never need to know which mode is active. */
+const distanceProvider = {
+  _cache: {},
+  isEstimate: !ORS_API_KEY,
+  km(a, b){
+    const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180;
+    const s = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(s));
+  },
+  label(a, b){ return this.km(a,b).toFixed(1) + " km"; },
+  _key(a,b){ return `${a.lat.toFixed(4)},${a.lng.toFixed(4)}|${b.lat.toFixed(4)},${b.lng.toFixed(4)}`; },
+  /* Async real travel time; caller passes a render callback that fires again
+     once the real number arrives, so the UI shows straight-line immediately
+     and upgrades in place — never blocks, never breaks if ORS is down. */
+  travelTimeMin(a, b, onReady){
+    if (!ORS_API_KEY) return null;
+    const key = this._key(a,b);
+    if (this._cache[key] !== undefined) { onReady(this._cache[key]); return; }
+    fetch("https://api.openrouteservice.org/v2/directions/driving-car?api_key="+ORS_API_KEY+
+      `&start=${a.lng},${a.lat}&end=${b.lng},${b.lat}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP "+r.status)))
+      .then(d => {
+        const sec = d.features?.[0]?.properties?.summary?.duration;
+        const min = sec ? Math.round(sec/60) : null;
+        this._cache[key] = min;
+        if (min !== null) onReady(min);
+      })
+      .catch(() => { /* silent fallback — straight-line label already shown */ });
+  }
 };
-
-/* ============================== DATE HELPERS ============================== */
-
-function dKey(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-function parseKey(k) { return new Date(k + "T00:00:00"); }
-function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
-function startOfDay(d) { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; }
-function roadmapMonthOf(d) { const m = (d.getFullYear() - 2026) * 12 + (d.getMonth() - 6) + 1; return Math.min(12, Math.max(1, m)); }
-function startOfWeek(d) { const r = new Date(d); const day = r.getDay(); const diff = day === 0 ? -6 : 1 - day; r.setDate(r.getDate() + diff); r.setHours(0, 0, 0, 0); return r; }
-function weekDateKeys(d) { const s = startOfWeek(d); return Array.from({ length: 7 }, (_, i) => dKey(addDays(s, i))); }
-function monthDateKeys(d) { const y = d.getFullYear(), m = d.getMonth(); const days = new Date(y, m + 1, 0).getDate(); return Array.from({ length: days }, (_, i) => dKey(new Date(y, m, i + 1))); }
-function quarterDateKeys(d) { const m = d.getMonth(); const qStart = m - (m % 3); let keys = []; for (let mm = qStart; mm <= qStart + 2; mm++) keys = keys.concat(monthDateKeys(new Date(d.getFullYear(), mm, 1))); return keys; }
-function isTaskActiveForMonth(t, rm) { return (t.startMonth == null || rm >= t.startMonth) && (t.endMonth == null || rm <= t.endMonth); }
-function isTaskActiveOnDate(t, date, rm) {
-  if (t.startDate || t.endDate) {
-    const k = dKey(date);
-    if (t.startDate && k < t.startDate) return false;
-    if (t.endDate && k > t.endDate) return false;
-    return true;
-  }
-  return isTaskActiveForMonth(t, rm);
-}
-function isDayActive(t, date) { return !t.activeDays || t.activeDays.includes(date.getDay()); }
-function getTasksFor(config, recurrence, date, rm) { return config.filter((t) => t.recurrence === recurrence && isTaskActiveOnDate(t, date, rm) && (recurrence !== "daily" || isDayActive(t, date))); }
-function monthlyKeysForRm(rm) {
-  const canonical = new Date(2026, 6 + (rm - 1), 1);
-  let keys = monthDateKeys(canonical);
-  // Month 1 can be used a few days before its official 1 Jul start (pre-launch); fold June
-  // in too so anything logged then still counts toward "Month 1" once July actually arrives.
-  if (rm === 1) keys = monthDateKeys(new Date(2026, 5, 1)).concat(keys);
-  return keys;
-}
-function quarterlyKeysForRm(rm) {
-  const canonical = new Date(2026, 6 + (rm - 1), 1);
-  let keys = quarterDateKeys(canonical);
-  if (rm <= 3) keys = monthDateKeys(new Date(2026, 5, 1)).concat(keys);
-  return keys;
-}
-function periodKeysFor(recurrence, date) {
-  if (recurrence === "weekly") return weekDateKeys(date);
-  if (recurrence === "monthly") return monthlyKeysForRm(roadmapMonthOf(date));
-  if (recurrence === "quarterly") return quarterlyKeysForRm(roadmapMonthOf(date));
-  return [dKey(date)];
-}
-function periodDoneCount(t, keys, log) { return keys.filter((k) => log[k] && log[k][t.id]).length; }
-function periodSum(t, keys, log) { return keys.reduce((a, k) => a + (log[k] && log[k][t.id] != null ? Number(log[k][t.id]) : 0), 0); }
-function periodLatest(t, keys, log) { for (let i = keys.length - 1; i >= 0; i--) { const v = log[keys[i]] && log[keys[i]][t.id]; if (v !== undefined && v !== null && v !== "") return v; } return undefined; }
-function periodComplete(t, keys, log) {
-  const target = t.target || 1;
-  if (t.inputType === "check") return periodDoneCount(t, keys, log) >= target;
-  if (t.aggregate === "latest") return periodLatest(t, keys, log) !== undefined;
-  const sum = periodSum(t, keys, log);
-  return t.target ? sum >= t.target : sum > 0;
-}
-function uid() { return "t-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-
-// For "snapshot" metrics (aggregate: "latest") — finds the most recently logged value
-// so it can be shown as a greyed-out placeholder. Never written to APP.log or the
-// server on its own; it's a visual hint only, so an empty/untouched field can never
-// silently save a phantom reading.
-function findLastKnownValue(taskId, excludeKey) {
-  const todayKey = dKey(startOfDay(new Date()));
-  const keys = Object.keys(APP.log)
-    .filter((k) => k <= todayKey && k !== excludeKey && APP.log[k] && APP.log[k][taskId] !== undefined && APP.log[k][taskId] !== null && APP.log[k][taskId] !== "")
-    .sort();
-  return keys.length ? APP.log[keys[keys.length - 1]][taskId] : undefined;
+function nearest(point, list){
+  let best=null, bestD=Infinity;
+  list.forEach(p => { const d=distanceProvider.km(point,p); if(d<bestD){bestD=d;best=p;} });
+  return { place: best, km: bestD.toFixed(1) };
 }
 
-/* ============================== BOOK PACE TRACKING ============================== */
-// A book task has startDate/endDate (started reading -> target finish) and
-// bookStart/bookEnd (the position values at those dates, e.g. 3 -> 97 for a
-// Kindle % that excludes front/back matter, or page 1 -> page 320). The logged
-// value each day is the current position, not a delta — same "snapshot"
-// semantics as aggregate:"latest" number tasks, just date-window-driven instead
-// of period-driven.
+const map = L.map("map", { zoomControl: true }).setView([28.468, 77.06], 12);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, subdomains: "abc", attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
 
-function daysBetween(keyA, keyB) {
-  return Math.round((parseKey(keyB) - parseKey(keyA)) / 86400000);
+function pinIcon(em, bg, size=30){
+  return L.divIcon({ className:"", html:`<div class="pin" style="background:${bg}">${em}</div>`,
+    iconSize:[size,size], iconAnchor:[size/2,size/2] });
+}
+function sectorIcon(rank){
+  const c = RANK_COLORS[rank] || "#888";
+  const sz = 50 - rank*3;
+  return L.divIcon({ className:"", html:`<div class="sector-wrap"><span class="rank" style="background:${c}">#${rank}</span><span class="em" style="font-size:${sz}px">🏘️</span></div>`,
+    iconSize:[50,48], iconAnchor:[25,44] });
+}
+function stars(n){
+  const full = Math.floor(n), half = n%1>=0.5;
+  return "★".repeat(full) + (half?"½":"") + "☆".repeat(5-full-(half?1:0));
+}
+function scoreRingColor(score){
+  if (score>=85) return "#1b7a3d";
+  if (score>=70) return "#4f9d4a";
+  if (score>=55) return "#d9a441";
+  if (score>=40) return "#d9852b";
+  return "#b8493d";
 }
 
-function expectedBookPosition(task, dateKey) {
-  if (!task.startDate || !task.endDate) return undefined;
-  const start = task.bookStart != null ? task.bookStart : 0;
-  const end = task.bookEnd != null ? task.bookEnd : 100;
-  const totalDays = daysBetween(task.startDate, task.endDate) + 1; // inclusive day count (Jul 1..Jul 31 = 31 days)
-  if (totalDays <= 0) return end;
-  let elapsed = daysBetween(task.startDate, dateKey) + 1; // Day 1 = one day of reading done
-  if (elapsed < 1) elapsed = 1;
-  if (elapsed > totalDays) elapsed = totalDays;
-  return start + (elapsed / totalDays) * (end - start);
-}
+/* ---- Layers ---- */
+const layers = {};
+layers["🏢 Office"] = L.layerGroup([
+  L.marker([OFFICE.lat, OFFICE.lng], { icon: pinIcon("🏢","#c8401a",38), zIndexOffset: 1000 })
+    .bindPopup(`<b>🏢 ${OFFICE.name}</b><br><span class="pop-tag">Your anchor point</span>`)
+]);
 
-// Most recent logged position at or before asOfKey — NOT bounded to "today", since a
-// book's current position is whatever you last reported, however many days ago.
-function latestBookValueAsOf(taskId, asOfKey) {
-  const keys = Object.keys(APP.log)
-    .filter((k) => k <= asOfKey && APP.log[k] && APP.log[k][taskId] !== undefined && APP.log[k][taskId] !== null && APP.log[k][taskId] !== "")
-    .sort();
-  return keys.length ? Number(APP.log[keys[keys.length - 1]][taskId]) : undefined;
-}
-
-// Builds the pill/track/caption markup for a book task as of controlKey. Shared by
-// the full editable row (renderTaskRow) and the read-only preview shown inline in
-// the Month tab's range-setup block, so the math and wording never drift apart.
-function bookPaceMarkup(task, controlKey) {
-  const unit = task.unit || (task.bookMode === "pages" ? "pg" : "%");
-  const start = task.bookStart != null ? task.bookStart : 0;
-  const end = task.bookEnd != null ? task.bookEnd : 100;
-  const range = (end - start) || 1;
-  const actualVal = latestBookValueAsOf(task.id, controlKey);
-  const expectedVal = expectedBookPosition(task, controlKey);
-  const actualPct = actualVal != null ? Math.max(0, Math.min(100, ((actualVal - start) / range) * 100)) : 0;
-  const expectedPct = expectedVal != null ? Math.max(0, Math.min(100, ((expectedVal - start) / range) * 100)) : null;
-
-  let paceHtml = "";
-  if (expectedVal != null) {
-    const totalDays = daysBetween(task.startDate, task.endDate);
-    let elapsed = daysBetween(task.startDate, controlKey);
-    if (elapsed < 0) elapsed = 0;
-    if (elapsed > totalDays) elapsed = totalDays;
-    let diffHtml = "";
-    if (actualVal != null) {
-      const diff = Math.round((actualVal - expectedVal) * 10) / 10;
-      const bookRange = Math.abs((task.bookEnd != null ? task.bookEnd : 100) - (task.bookStart != null ? task.bookStart : 0));
-      const tol = Math.max(0.5, bookRange * 0.02); // within ~2% of the book counts as on pace
-      if (Math.abs(diff) <= tol) diffHtml = '<span class="pace-ontrack">on pace</span>';
-      else if (diff > 0) diffHtml = '<span class="pace-ahead">+' + diff + unit + " ahead</span>";
-      else diffHtml = '<span class="pace-behind">' + diff + unit + " behind</span>";
-    }
-    paceHtml = '<div class="book-pace">Day ' + (elapsed + 1) + " of " + (totalDays + 1) + " \u00b7 target ~" + (Math.round(expectedVal * 10) / 10) + unit + (diffHtml ? " \u00b7 " + diffHtml : "") + "</div>";
-  }
-
-  const trackHtml = '<div class="book-track"><div class="book-track-fill" style="width:' + actualPct.toFixed(1) + '%"></div>' +
-    (expectedPct != null ? '<div class="book-track-target" style="left:' + expectedPct.toFixed(1) + '%"></div>' : "") +
-    "</div>";
-
-  const pillHtml = '<span class="pill">' + (actualVal != null ? esc(actualVal) + unit : "—") + "</span>";
-
-  return { pillHtml, trackHtml, paceHtml, actualVal, unit };
-}
-
-// True for any task whose id ends in "-book" (the monthly m1-book..m12-book
-// pattern, and the Blueprint's fortnight-book tasks like bp-fn1-book).
-function isBookCheckTask(t) {
-  return /-book$/.test(t.id);
-}
-function bookProgressIdFor(parentId) {
-  return parentId + "-progress";
-}
-function findBookProgressTask(parentId) {
-  return APP.config.find((t) => t.id === bookProgressIdFor(parentId));
-}
-// First/last calendar day of the given roadmap month — used as the default reading
-// window when a book's % range is set from the Month tab (matches the "book for
-// July" mental model: the range spans that whole calendar month).
-function roadmapMonthCalendarRange(rm) {
-  const start = new Date(2026, 6 + (rm - 1), 1);
-  const end = new Date(2026, 6 + (rm - 1) + 1, 0);
-  return { start: dKey(start), end: dKey(end) };
-}
-// Dated (startDate/endDate) daily-recurrence career/learning tasks whose window
-// STARTS within the given roadmap month's calendar range — this is how the
-// Blueprint's fortnight books/practices/courses/checkpoints (which are date-ranged,
-// not startMonth/endMonth-scoped) surface on the Month tab. Attribution is by
-// start date only (not "any day overlaps"), so a task that starts near a month
-// boundary doesn't visually double up across two months' cards — it still runs
-// its full date range functionally on Today/Week regardless of this attribution.
-function blueprintTasksForMonth(rm) {
-  const { start, end } = roadmapMonthCalendarRange(rm);
-  return APP.config.filter((t) =>
-    t.recurrence === "daily" &&
-    (t.category === "career" || t.category === "learning") &&
-    t.startDate && t.endDate &&
-    t.startDate >= start && t.startDate <= end
+const sectorItems = [];
+SECTORS.forEach(s => {
+  const c = RANK_COLORS[s.rank];
+  sectorItems.push(L.circle([s.lat,s.lng], { radius:s.radiusM, color:c, weight:RANK_WEIGHT[s.rank], fillColor:c, fillOpacity:RANK_OPACITY[s.rank] }));
+  const box = (cls, label, items) => `<div class="box ${cls}"><b>${label}</b><ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`;
+  const conf = CONFIDENCE[s.confidence] || CONFIDENCE.unvalidated;
+  sectorItems.push(
+    L.marker([s.lat,s.lng], { icon: sectorIcon(s.rank), zIndexOffset: 900 })
+      .bindPopup(`<div class="card-title">#${s.rank} 🏘️ ${s.name}</div>
+        <div class="card-stars">${stars(s.stars)} &nbsp; <span style="color:${conf.color};font-weight:700;font-size:11px;">${conf.label}</span></div>
+        ${box("pros","✅ Pros", s.pros)}
+        ${box("cons","⚠️ Cons", s.cons)}
+        ${box("verify","🔍 Verify in person", s.verify)}
+        ${box("conn","📍 Connectivity", s.conn)}`)
   );
-}
-
-/* ============================== LIFETIME STATS ============================== */
-
-function computeLifetimeStats(task, log, today) {
-  let startDate, cap;
-  if (task.startDate || task.endDate) {
-    startDate = task.startDate ? parseKey(task.startDate) : new Date(ROADMAP_START);
-    if (startDate > today) return null;
-    const endDate = task.endDate ? parseKey(task.endDate) : today;
-    cap = endDate < today ? endDate : today;
-  } else {
-    const rmStart = task.startMonth || 1;
-    const rmEnd = task.endMonth || 12;
-    startDate = new Date(2026, 6 + (rmStart - 1), 1);
-    if (startDate < ROADMAP_START) startDate = new Date(ROADMAP_START);
-    if (startDate > today) return null;
-    const windowEnd = new Date(2026, 6 + (rmEnd - 1) + 1, 0);
-    cap = windowEnd < today ? windowEnd : today;
-  }
-  let total = 0, done = 0, cursor;
-
-  if (task.recurrence === "daily") {
-    cursor = new Date(startDate);
-    while (cursor <= cap) {
-      if (isDayActive(task, cursor)) { total++; if (log[dKey(cursor)] && log[dKey(cursor)][task.id]) done++; }
-      cursor = addDays(cursor, 1);
-    }
-  } else if (task.recurrence === "weekly") {
-    cursor = startOfWeek(startDate);
-    while (cursor <= cap) { total++; if (periodComplete(task, weekDateKeys(cursor), log)) done++; cursor = addDays(cursor, 7); }
-  } else if (task.recurrence === "monthly") {
-    cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    while (cursor <= cap) { total++; if (periodComplete(task, monthDateKeys(cursor), log)) done++; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1); }
-  } else if (task.recurrence === "quarterly") {
-    const sm = startDate.getMonth();
-    cursor = new Date(startDate.getFullYear(), sm - (sm % 3), 1);
-    while (cursor <= cap) { total++; if (periodComplete(task, quarterDateKeys(cursor), log)) done++; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 3, 1); }
-  }
-  return total > 0 ? { done: done, total: total, rate: done / total } : null;
-}
-
-/* ============================== RENDER: TODAY ============================== */
-
-function renderTaskRow(task, recurrence, pillKey, controlKey, readOnly) {
-  const keys = periodKeysFor(recurrence, parseKey(pillKey));
-  const isDailyLike = recurrence === "daily";
-  let pillHtml = "";
-  if (!isDailyLike) {
-    if (task.inputType === "check") {
-      const done = periodDoneCount(task, keys, APP.log);
-      const target = task.target || 1;
-      pillHtml = '<span class="pill ' + (done >= target ? "pill-on" : "") + '">' + Math.min(done, target) + "/" + target + "</span>";
-    } else if (task.aggregate === "latest") {
-      const v = periodLatest(task, keys, APP.log);
-      pillHtml = '<span class="pill">' + (v !== undefined ? esc(v) + (task.unit ? " " + esc(task.unit) : "") : "—") + "</span>";
-    } else {
-      const sum = periodSum(task, keys, APP.log);
-      pillHtml = '<span class="pill">Σ ' + sum + (task.unit ? " " + esc(task.unit) : "") + "</span>";
-    }
-  }
-  const dot = '<span class="dot" style="background:' + CATEGORIES[task.category].color + '"></span>';
-  const notesHtml = task.notes ? '<div class="task-notes">' + esc(task.notes) + "</div>" : "";
-
-  // Book tasks get a pace readout (where you should be today vs where you last
-  // reported) and a thin progress track with a marker showing the target position.
-  if (task.inputType === "book") {
-    const pace = bookPaceMarkup(task, controlKey);
-    const unit = pace.unit;
-    const actualVal = pace.actualVal;
-
-    let controlHtml2 = "";
-    if (!readOnly) {
-      const todayLogVal = (APP.log[controlKey] || {})[task.id];
-      const valAttr = todayLogVal === undefined || todayLogVal === null ? "" : esc(String(todayLogVal));
-      const placeholderVal = actualVal != null ? String(actualVal) : "—";
-      const stepVal = task.step != null ? task.step : 1;
-      const minus = '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="-' + stepVal + '" aria-label="Decrease">\u2212</button>';
-      const plus = '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="' + stepVal + '" aria-label="Increase">+</button>';
-      controlHtml2 = '<div class="num-wrap">' + minus + '<input type="number" inputmode="decimal" class="num" placeholder="' + esc(placeholderVal) + '" data-action="number" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" value="' + valAttr + '">' + plus + '<span class="unit">' + esc(unit) + "</span></div>";
-    }
-    const pillHtml2 = '<span class="pill">' + (actualVal != null ? esc(actualVal) + unit : "—") + "</span>";
-
-    return (
-      '<div class="task-row book-task' + (readOnly ? " readonly" : "") + '">' +
-        '<div class="task-row-top">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pace.pillHtml + (readOnly ? "" : '<div class="task-control">' + controlHtml2 + "</div>") + "</div>" +
-        pace.trackHtml +
-        pace.paceHtml +
-      "</div>"
-    );
-  }
-
-  // Scale tasks (0-10 buttons) get a two-line layout: label+pill on top, the button row below.
-  if (task.inputType === "scale") {
-    const dayLog = APP.log[controlKey] || {};
-    const curVal = dayLog[task.id];
-    let scaleRow = "";
-    if (!readOnly) {
-      let btns = "";
-      for (let i = 0; i <= 10; i++) {
-        btns += '<button type="button" class="scale-btn ' + (curVal === i ? "on" : "") + '" data-action="scale" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-value="' + i + '">' + i + "</button>";
-      }
-      scaleRow = '<div class="scale-row">' + btns + "</div>";
-    }
-    return (
-      '<div class="task-row scale-task' + (readOnly ? " readonly" : "") + '">' +
-        '<div class="task-row-top">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pillHtml + "</div>" +
-        scaleRow +
-      "</div>"
-    );
-  }
-
-  let controlHtml = "";
-  if (readOnly) {
-    controlHtml = "";
-  } else {
-    const dayLog = APP.log[controlKey] || {};
-    const todayVal = dayLog[task.id];
-    if (task.inputType === "check") {
-      // Non-daily tasks with a target of exactly 1 are "did this happen this period at all" —
-      // the box should reflect whether the PERIOD is satisfied, not whether today specifically
-      // has an entry (otherwise it looks unchecked again on every new day you revisit it).
-      if (!isDailyLike && (task.target || 1) === 1) {
-        const periodChecked = periodDoneCount(task, keys, APP.log) >= 1;
-        controlHtml = '<input type="checkbox" class="chk" data-action="toggle-period" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-recurrence="' + recurrence + '" data-pillkey="' + pillKey + '" ' + (periodChecked ? "checked" : "") + ">";
-      } else {
-        controlHtml = '<input type="checkbox" class="chk" data-action="toggle" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" ' + (todayVal ? "checked" : "") + ">";
-      }
-    } else {
-      const valAttr = todayVal === undefined || todayVal === null ? "" : esc(String(todayVal));
-      let placeholder = "—";
-      if ((todayVal === undefined || todayVal === null) && task.aggregate === "latest") {
-        const last = findLastKnownValue(task.id, controlKey);
-        if (last !== undefined) placeholder = String(last);
-      }
-      const minus = task.step ? '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="-' + task.step + '" aria-label="Decrease">\u2212</button>' : "";
-      const plus = task.step ? '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="' + task.step + '" aria-label="Increase">+</button>' : "";
-      controlHtml = '<div class="num-wrap">' + minus + '<input type="number" inputmode="decimal" class="num" placeholder="' + esc(placeholder) + '" data-action="number" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" value="' + valAttr + '">' + plus + (task.unit ? '<span class="unit">' + esc(task.unit) + "</span>" : "") + "</div>";
-    }
-  }
-  return '<div class="task-row' + (readOnly ? " readonly" : "") + '">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pillHtml + '<div class="task-control">' + controlHtml + "</div></div>";
-}
-
-function renderSection(title, tasks, recurrence, pillKey, controlKey, readOnly, emptyText) {
-  const checks = tasks.filter((t) => t.inputType === "check");
-  const keys = periodKeysFor(recurrence, parseKey(pillKey));
-  const doneCount = checks.filter((t) => periodComplete(t, keys, APP.log)).length;
-  const countHtml = checks.length > 0 ? '<span class="section-count">' + doneCount + "/" + checks.length + "</span>" : "";
-  const body = tasks.length === 0 ? '<p class="empty">' + esc(emptyText) + "</p>" : '<div class="rows">' + tasks.map((t) => renderTaskRow(t, recurrence, pillKey, controlKey, readOnly)).join("") + "</div>";
-  return '<section class="section"><div class="section-head"><span class="section-title">' + esc(title) + "</span>" + countHtml + "</div>" + body + (readOnly ? '<p class="hint">Past/future periods are view-only — switch back to the current one to log entries.</p>' : "") + "</section>";
-}
-
-const WORKOUT_DAY_NAMES = {
-  0: "Core + Hip Flexors + Calves/Feet",
-  1: "Glutes",
-  2: "Back + Shoulders",
-  3: "Hamstrings",
-  4: "Chest + Triceps",
-  5: "Quads",
-  6: "Biceps + Neck",
-};
-
-function renderWorkout() {
-  const today = startOfDay(new Date());
-  const sel = startOfDay(APP.selected);
-  const isToday = sel.getTime() === today.getTime();
-  const selectedKey = dKey(sel);
-  const rm = roadmapMonthOf(sel);
-  const dayOfWeek = sel.getDay();
-  const groupName = WORKOUT_DAY_NAMES[dayOfWeek];
-
-  const exercises = getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category === "workout");
-  const sectionsHtml = renderSection("TODAY'S GROUP \u2014 " + groupName.toUpperCase(), exercises, "daily", selectedKey, selectedKey, false, "No workout scheduled \u2014 rest day.");
-
-  return (
-    '<header class="hdr">' +
-      '<div class="hdr-top"><span class="eyebrow">WORKOUT</span></div>' +
-      '<div class="day-nav"><button data-action="prev-day" aria-label="Previous day">\u2039</button>' +
-      '<div class="day-label"><span class="day-name">' + sel.toLocaleDateString("en-IN", { weekday: "long" }) + "</span>" +
-      '<span class="day-date">' + sel.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + "</span></div>" +
-      '<button data-action="next-day" aria-label="Next day" ' + (isToday ? "disabled" : "") + ">\u203a</button>" +
-      (!isToday ? '<button class="jump-today" data-action="jump-today">Today</button>' : "") +
-      "</div>" +
-      '<p class="month-theme">Log sets completed per exercise \u2014 target shown in the notes.</p>' +
-    "</header>" +
-    sectionsHtml
-  );
-}
-
-function renderToday() {
-  const today = startOfDay(new Date());
-  const sel = startOfDay(APP.selected);
-  const isToday = sel.getTime() === today.getTime();
-  const rm = roadmapMonthOf(sel);
-  const selectedKey = dKey(sel);
-  const monthMeta = MONTHS[rm - 1];
-  const quarterMeta = QUARTERS[monthMeta.quarter];
-
-  const allKeys = Object.keys(APP.log).filter((k) => APP.log[k] && Object.keys(APP.log[k]).length > 0);
-  const lastActiveKey = allKeys.length ? allKeys.sort().pop() : null;
-  const daysSinceLast = lastActiveKey ? Math.floor((today - startOfDay(parseKey(lastActiveKey))) / 86400000) : null;
-  const suggestMVE = daysSinceLast !== null && daysSinceLast >= 7;
-
-  const dailyTasksAll = APP.mveMode ? APP.config.filter((t) => MVE_IDS.includes(t.id)) : getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category !== "workout" && t.inputType !== "book");
-  const sleepTask = dailyTasksAll.find((t) => t.id === "d-sleephours");
-  const waterTask = dailyTasksAll.find((t) => t.id === "d-water");
-  const dailyTasks = sortByRoutineOrder_(dailyTasksAll.filter((t) => t.id !== "d-sleephours" && t.id !== "d-water"));
-
-  const bannerHtml = suggestMVE && !APP.mveMode
-    ? '<div class="banner"><p>It\u2019s been ' + daysSinceLast + ' days since the last log. No story needed \u2014 just the Minimum Viable Engine: morning walk, McGill Big 3, reading, sleep. Add the rest back once that feels steady.</p><button data-action="enter-mve">Switch to MVE</button></div>'
-    : "";
-
-  const sleepHtml = sleepTask ? '<section class="section"><div class="rows">' + renderTaskRow(sleepTask, "daily", selectedKey, selectedKey, false) + "</div></section>" : "";
-  const waterHtml = waterTask ? '<section class="section"><div class="rows">' + renderTaskRow(waterTask, "daily", selectedKey, selectedKey, false) + "</div></section>" : "";
-  const workoutSummaryHtml = APP.mveMode ? "" : renderWorkoutSummaryToday(sel, rm, selectedKey);
-  const sectionsHtml = renderSection("DAILY ENGINE", dailyTasks, "daily", selectedKey, selectedKey, false, "Nothing scheduled today.");
-
-  return (
-    '<header class="hdr">' +
-      '<div class="hdr-top"><span class="eyebrow">TODAY</span>' +
-      '<button class="mve-toggle ' + (APP.mveMode ? "active" : "") + '" data-action="toggle-mve">' + (APP.mveMode ? "Exit MVE" : "MVE mode") + "</button></div>" +
-      '<div class="day-nav"><button data-action="prev-day" aria-label="Previous day">\u2039</button>' +
-      '<div class="day-label"><span class="day-name">' + sel.toLocaleDateString("en-IN", { weekday: "long" }) + "</span>" +
-      '<span class="day-date">' + sel.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + "</span></div>" +
-      '<button data-action="next-day" aria-label="Next day" ' + (isToday ? "disabled" : "") + ">\u203a</button>" +
-      (!isToday ? '<button class="jump-today" data-action="jump-today">Today</button>' : "") +
-      "</div>" +
-      '<p class="month-theme">' + esc(monthMeta.full) + " \u00b7 Q" + monthMeta.quarter + " " + esc(quarterMeta.name) + "</p>" +
-    "</header>" +
-    bannerHtml +
-    sleepHtml +
-    workoutSummaryHtml +
-    waterHtml +
-    sectionsHtml +
-    renderActiveBooksSection(false)
-  );
-}
-
-function renderWorkoutSummaryToday(sel, rm, selectedKey) {
-  const tasks = getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category === "workout");
-  if (!tasks.length) return "";
-  const groupName = WORKOUT_DAY_NAMES[sel.getDay()];
-  const dayLog = APP.log[selectedKey] || {};
-  const doneCount = tasks.filter((t) => {
-    const v = dayLog[t.id];
-    if (t.inputType === "check") return !!v;
-    return v !== undefined && v !== null && Number(v) >= (t.target || 1);
-  }).length;
-  const allDone = doneCount === tasks.length;
-  return (
-    '<section class="section">' +
-      '<div class="task-row" data-tab="workout" style="cursor:pointer;">' +
-        '<span class="dot" style="background:' + CATEGORIES.workout.color + '"></span>' +
-        '<div class="task-main"><div class="task-label">Workout \u2014 ' + esc(groupName) + "</div>" +
-        '<div class="task-notes">Tap to open the Workout tab for sets & cues.</div></div>' +
-        '<span class="pill ' + (allDone ? "pill-on" : "") + '">' + doneCount + "/" + tasks.length + "</span>" +
-      "</div>" +
-    "</section>"
-  );
-}
-
-function renderActiveBooksSection(readOnly) {
-  const today = startOfDay(new Date());
-  const rm = roadmapMonthOf(today);
-  const todayKey = dKey(today);
-  const books = APP.config.filter((t) => t.inputType === "book" && isTaskActiveOnDate(t, today, rm));
-  if (!books.length) return "";
-  const rows = books.map((t) => renderTaskRow(t, "daily", todayKey, todayKey, readOnly)).join("");
-  const hint = readOnly
-    ? "Logged from the Today tab \u2014 shown here so you can see pace at a glance."
-    : "Enter today\u2019s actual progress below \u2014 this always targets today, whichever week you\u2019re browsing.";
-  return (
-    '<section class="section"><div class="section-head"><span class="section-title">READING PROGRESS</span></div>' +
-    '<div class="rows">' + rows + "</div>" +
-    '<p class="hint">' + hint + "</p></section>"
-  );
-}
-
-// Month tab: for each of this month's "Read: <title>" checkbox tasks, show the
-// completion checkbox (handled by the normal THIS MONTH section above) plus a
-// dedicated block here for configuring that book's % (or page) range — separate
-// from the checkbox, per request. Three states: not yet configured (a single
-// "set range" button), currently being edited (inline form), or configured
-// (a small read-only pace preview with edit/stop links).
-function renderMonthBookSetup(bookTasks) {
-  if (!bookTasks.length) return "";
-  const today = startOfDay(new Date());
-  const todayKey = dKey(today);
-
-  return bookTasks.map((parent) => {
-    const title = parent.label.replace(/^Read:\s*/i, "");
-    const companion = findBookProgressTask(parent.id);
-    const editing = APP.editingBookRangeFor === parent.id;
-    let body;
-
-    if (editing) {
-      const f = APP.bookRangeForm;
-      body = (
-        '<div class="book-setup-form">' +
-          '<div class="row2"><div class="form-row" style="flex:1;margin-bottom:0;"><label>Start page</label><input class="input" type="number" data-bookrange-field="start" value="' + esc(f.start) + '" placeholder="1"></div>' +
-          '<div class="form-row" style="flex:1;margin-bottom:0;"><label>End page</label><input class="input" type="number" data-bookrange-field="end" value="' + esc(f.end) + '" placeholder="320"></div></div>' +
-          '<p class="hint">Enter the page you start on and the last page you\u2019ll read. The daily target ramps evenly across this month.</p>' +
-          '<div class="form-actions"><button class="btn-secondary" data-action="cancel-book-range">Cancel</button><button class="btn-primary" data-action="save-book-range" data-parent="' + esc(parent.id) + '">Save range</button></div>' +
-        "</div>"
-      );
-    } else if (companion) {
-      const pace = bookPaceMarkup(companion, todayKey);
-      body = (
-        '<div class="book-setup-preview">' +
-          '<div class="book-pace-label">p.' + esc(companion.bookStart) + " \u2192 p." + esc(companion.bookEnd) + " \u00b7 " + esc(companion.startDate) + " to " + esc(companion.endDate) + "</div>" +
-          pace.trackHtml + pace.paceHtml +
-          '<div class="book-setup-preview-actions"><button class="link-btn" data-action="open-book-range" data-parent="' + esc(parent.id) + '">Edit range</button><button class="link-btn danger" data-action="stop-book-tracking" data-parent="' + esc(parent.id) + '">Stop tracking</button></div>' +
-        "</div>"
-      );
-    } else {
-      body = '<div class="book-setup"><button class="btn-secondary" data-action="open-book-range" data-parent="' + esc(parent.id) + '">Set this book\u2019s page range</button></div>';
-    }
-
-    return '<section class="section"><div class="section-head"><span class="section-title">' + esc(title.toUpperCase()) + " \u2014 PAGES</span></div>" + body + "</section>";
-  }).join("");
-}
-
-function renderWeek() {
-  const today = startOfDay(new Date());
-  const sel = startOfDay(APP.selected);
-  const weekStart = startOfWeek(sel);
-  const weekEnd = addDays(weekStart, 6);
-  const isCurrentWeek = weekStart.getTime() === startOfWeek(today).getTime();
-  const rm = roadmapMonthOf(sel);
-  const pillKey = dKey(weekStart);
-  const controlKey = dKey(today);
-
-  const weeklyTasks = getTasksFor(APP.config, "weekly", sel, rm);
-  const sectionsHtml = renderSection("THIS WEEK", weeklyTasks, "weekly", pillKey, controlKey, !isCurrentWeek, "No weekly items active.") + renderActiveBooksSection(false);
-
-  return (
-    '<header class="hdr">' +
-      '<div class="hdr-top"><span class="eyebrow">WEEK</span></div>' +
-      '<div class="day-nav"><button data-action="prev-week" aria-label="Previous week">\u2039</button>' +
-      '<div class="day-label"><span class="day-name">' + weekStart.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + " \u2013 " + weekEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + "</span>" +
-      '<span class="day-date">' + (isCurrentWeek ? "This week" : weekStart.toLocaleDateString("en-IN", { year: "numeric" })) + "</span></div>" +
-      '<button data-action="next-week" aria-label="Next week">\u203a</button>' +
-      (!isCurrentWeek ? '<button class="jump-today" data-action="jump-week">This week</button>' : "") +
-      "</div>" +
-    "</header>" +
-    sectionsHtml
-  );
-}
-
-function renderMonth() {
-  const today = startOfDay(new Date());
-  const sel = startOfDay(APP.selected);
-  const rm = roadmapMonthOf(sel);
-  const todayRm = roadmapMonthOf(today);
-  const isCurrentMonth = rm === todayRm;
-  const monthMeta = MONTHS[rm - 1];
-  const quarterMeta = QUARTERS[monthMeta.quarter];
-  const pillKey = dKey(new Date(sel.getFullYear(), sel.getMonth(), 1));
-  const controlKey = dKey(today);
-
-  const monthlyTasks = getTasksFor(APP.config, "monthly", sel, rm);
-  const quarterlyTasks = rm % 3 === 0 ? getTasksFor(APP.config, "quarterly", sel, rm) : [];
-  const blueprintTasks = blueprintTasksForMonth(rm);
-  const blueprintNonBook = blueprintTasks.filter((t) => !isBookCheckTask(t) && t.inputType !== "book");
-  const allBookTasks = monthlyTasks.filter(isBookCheckTask).concat(blueprintTasks.filter(isBookCheckTask));
-  const todayKey = dKey(today);
-
-  const odometer = MONTHS.map((m) => {
-    const op = m.n < rm ? 0.85 : m.n === rm ? 1 : 0.22;
-    const outline = m.n === rm ? "outline:1.5px solid " + ACCENT + ";" : "";
-    return '<div class="odo-seg" title="' + esc(m.full + " — " + m.theme) + '" style="background:' + QUARTERS[m.quarter].color + ";opacity:" + op + ";" + outline + '"></div>';
-  }).join("");
-
-  let sectionsHtml = renderSection("THIS MONTH", monthlyTasks, "monthly", pillKey, controlKey, !isCurrentMonth, "No monthly items active.");
-  if (rm % 3 === 0) sectionsHtml += renderSection("THIS QUARTER", quarterlyTasks, "quarterly", pillKey, controlKey, !isCurrentMonth, "No quarterly items active.");
-  if (blueprintNonBook.length) sectionsHtml += renderSection("CAREER — ALLIANCES BLUEPRINT", blueprintNonBook, "daily", todayKey, todayKey, !isCurrentMonth, "");
-  sectionsHtml += renderMonthBookSetup(allBookTasks);
-
-  return (
-    '<header class="hdr">' +
-      '<div class="hdr-top"><span class="eyebrow">THE 12-MONTH ENGINE</span>' +
-      '<button class="mve-toggle" data-action="add-book-shortcut">+ Track a book</button></div>' +
-      '<div class="hdr-main"><h1>' + esc(monthMeta.full) + "</h1>" +
-      '<span class="quarter-badge" style="color:' + quarterMeta.color + ";border-color:" + quarterMeta.color + '">Q' + monthMeta.quarter + " \u00b7 " + esc(quarterMeta.name) + "</span></div>" +
-      '<p class="month-theme">' + esc(monthMeta.theme) + "</p>" +
-      '<div class="odometer">' + odometer + "</div>" +
-      '<div class="day-nav"><button data-action="prev-month" aria-label="Previous month" ' + (rm <= 1 ? "disabled" : "") + ">\u2039</button>" +
-      '<div class="day-label"><span class="day-name">Month ' + rm + " of 12</span>" +
-      '<span class="day-date">' + (isCurrentMonth ? "Current month" : "") + "</span></div>" +
-      '<button data-action="next-month" aria-label="Next month" ' + (rm >= 12 ? "disabled" : "") + ">\u203a</button>" +
-      (!isCurrentMonth ? '<button class="jump-today" data-action="jump-month">This month</button>' : "") +
-      "</div>" +
-    "</header>" +
-    sectionsHtml
-  );
-}
-
-/* ============================== RENDER: TRENDS ============================== */
-
-function renderHeatmap() {
-  const today = startOfDay(new Date());
-  const rawStart = addDays(today, -69);
-  const gridStart = startOfWeek(rawStart); // back up to Monday so columns line up under Mon..Sun
-  const totalCells = Math.floor((today - gridStart) / 86400000) + 1;
-  const days = Array.from({ length: totalCells }, (_, i) => addDays(gridStart, i));
-  const cells = days.map((d) => {
-    const rm = roadmapMonthOf(d);
-    const dailyChecks = APP.config.filter((t) => t.recurrence === "daily" && t.inputType === "check" && isTaskActiveOnDate(t, d, rm) && isDayActive(t, d));
-    const k = dKey(d);
-    let style, titleText;
-    if (dailyChecks.length > 0) {
-      const done = dailyChecks.filter((t) => APP.log[k] && APP.log[k][t.id]).length;
-      const ratio = done / dailyChecks.length;
-      style = "background:rgba(201,164,100," + (0.12 + ratio * 0.78).toFixed(2) + ");border:1px solid transparent;";
-      titleText = d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) + " \u2014 " + Math.round(ratio * 100) + "%";
-    } else {
-      style = "background:transparent;border:1px solid var(--border);";
-      titleText = d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
-    }
-    return '<div class="heat-cell" title="' + esc(titleText) + '" style="' + style + '"></div>';
-  }).join("");
-  const header = ["M", "T", "W", "T", "F", "S", "S"].map((l) => '<div class="heat-head">' + l + "</div>").join("");
-  return '<div class="heatmap">' + header + cells + "</div>";
-}
-
-function renderLineChart(history, unit) {
-  if (history.length < 2) return '<p class="empty">Not enough logged points yet for this metric.</p>';
-  const w = 320, h = 170, pad = 30;
-  const values = history.map((p) => p.value);
-  const min = Math.min.apply(null, values), max = Math.max.apply(null, values);
-  const range = max - min || 1;
-  const pts = history.map((p, i) => {
-    const x = pad + (history.length === 1 ? 0 : (i / (history.length - 1)) * (w - 2 * pad));
-    const y = h - pad - ((p.value - min) / range) * (h - 2 * pad);
-    return [x, y];
-  });
-  const poly = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-  const circles = pts.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3" fill="#74A6A0"></circle>').join("");
-  return (
-    '<svg viewBox="0 0 ' + w + " " + h + '" class="linechart">' +
-    '<polyline points="' + poly + '" fill="none" stroke="#74A6A0" stroke-width="2"/>' +
-    circles +
-    '<text x="' + pad + '" y="' + (h - 8) + '" class="chart-label">' + esc(history[0].date) + "</text>" +
-    '<text x="' + (w - pad) + '" y="' + (h - 8) + '" text-anchor="end" class="chart-label">' + esc(history[history.length - 1].date) + "</text>" +
-    '<text x="' + pad + '" y="14" class="chart-label">' + esc(String(max)) + (unit ? " " + esc(unit) : "") + "</text>" +
-    '<text x="' + pad + '" y="' + (h - pad + 14) + '" class="chart-label">' + esc(String(min)) + (unit ? " " + esc(unit) : "") + "</text>" +
-    "</svg>"
-  );
-}
-
-function movingAverage(history, window) {
-  return history.map((p, i) => {
-    const start = Math.max(0, i - window + 1);
-    const slice = history.slice(start, i + 1);
-    const avg = slice.reduce((a, b) => a + b.value, 0) / slice.length;
-    return { date: p.date, value: Math.round(avg * 100) / 100 };
-  });
-}
-
-function renderTrends() {
-  const today = startOfDay(new Date());
-  const numberTasks = APP.config.filter((t) => t.inputType === "number" || t.inputType === "scale" || t.inputType === "book");
-  if (!APP.trendsMetricId && numberTasks[0]) APP.trendsMetricId = numberTasks[0].id;
-  const metricId = APP.trendsMetricId;
-  const metricTask = APP.config.find((t) => t.id === metricId);
-
-  const history = metricId
-    ? Object.keys(APP.log).filter((k) => APP.log[k] && APP.log[k][metricId] != null && APP.log[k][metricId] !== "").sort()
-        .map((k) => ({ date: parseKey(k).toLocaleDateString("en-IN", { day: "numeric", month: "short" }), value: Number(APP.log[k][metricId]) }))
-    : [];
-
-  const canSmooth = metricTask && metricTask.recurrence === "daily";
-  const plotData = canSmooth && APP.trendsShowAvg ? movingAverage(history, 7) : history;
-
-  const stats = APP.config
-    .filter((t) => t.inputType !== "book" && !(t.startMonth && t.startMonth === t.endMonth))
-    .map((t) => ({ task: t, stat: computeLifetimeStats(t, APP.log, today) }))
-    .filter((x) => x.stat)
-    .sort((a, b) => a.task.category.localeCompare(b.task.category) || a.task.label.localeCompare(b.task.label));
-
-  const optionsHtml = numberTasks.map((t) => '<option value="' + esc(t.id) + '" ' + (t.id === metricId ? "selected" : "") + ">" + esc(t.label) + "</option>").join("");
-
-  const statsHtml = stats.length === 0
-    ? '<p class="empty">No recurring tasks have started yet.</p>'
-    : '<div class="rows">' + stats.map(({ task, stat }) =>
-        '<div class="stat-row"><span class="dot" style="background:' + CATEGORIES[task.category].color + '"></span>' +
-        '<div class="stat-main"><div class="stat-label">' + esc(task.label) + "</div>" +
-        '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + Math.round(stat.rate * 100) + "%;background:" + CATEGORIES[task.category].color + '"></div></div></div>' +
-        '<span class="stat-pct">' + Math.round(stat.rate * 100) + "%</span></div>"
-      ).join("") + "</div>";
-
-  const smoothToggle = canSmooth
-    ? '<label class="always-check" style="margin-top:8px;"><input type="checkbox" data-action="toggle-trends-avg" ' + (APP.trendsShowAvg ? "checked" : "") + "> Show 7-day average instead of raw points</label>"
-    : "";
-
-  return (
-    '<section class="section"><div class="section-head"><span class="section-title">LAST 10 WEEKS</span></div>' +
-    renderHeatmap() +
-    '<p class="hint">Each square is one day\u2019s Daily Engine completion. Blank squares had nothing scheduled that day.</p></section>' +
-    '<section class="section"><div class="section-head"><span class="section-title">METRIC OVER TIME</span></div>' +
-    '<select class="select" data-action="metric-select">' + optionsHtml + "</select>" +
-    smoothToggle +
-    '<div style="margin-top:12px;">' + renderLineChart(plotData, metricTask ? metricTask.unit : "") + "</div></section>" +
-    '<section class="section"><div class="section-head"><span class="section-title">COMPLETION RATE \u2014 LIFETIME</span></div>' + statsHtml + "</section>"
-  );
-}
-
-/* ============================== RENDER: MANAGE ============================== */
-
-function windowLabel(t) {
-  if (t.startDate || t.endDate) {
-    const fmt = (k) => parseKey(k).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-    const s = t.startDate ? fmt(t.startDate) : "\u2026";
-    const e = t.endDate ? fmt(t.endDate) : "\u2026";
-    return s === e ? s : s + " \u2013 " + e;
-  }
-  if (t.startMonth == null && t.endMonth == null) return "Always";
-  const s = MONTHS[(t.startMonth || 1) - 1].label;
-  const e = MONTHS[(t.endMonth || 12) - 1].label;
-  return s === e ? s : s + " \u2013 " + e;
-}
-
-function renderManageRow(t) {
-  return (
-    '<div class="manage-row"><span class="dot" style="background:' + CATEGORIES[t.category].color + '"></span>' +
-    '<div class="manage-main"><div class="manage-label">' + esc(t.label) + "</div>" +
-    '<div class="manage-meta"><span class="chip-static">' + esc(t.recurrence) + "</span>" +
-    '<span class="chip-static">' + (t.inputType === "number" ? "number" + (t.unit ? " \u00b7 " + esc(t.unit) : "") : "check") + "</span>" +
-    '<span class="chip-static">' + esc(windowLabel(t)) + "</span></div></div>" +
-    '<button class="icon-btn" data-action="edit-task" data-id="' + esc(t.id) + '" aria-label="Edit">\u270e</button>' +
-    '<button class="icon-btn danger" data-action="delete-task" data-id="' + esc(t.id) + '" aria-label="Delete">\u2715</button></div>'
-  );
-}
-
-function renderForm() {
-  const f = APP.form.data;
-  const isDaily = f.recurrence === "daily";
-  const isNumber = f.inputType === "number";
-  const isScale = f.inputType === "scale";
-  const isBook = f.inputType === "book";
-  const showTarget = !isBook && f.recurrence !== "daily" && (f.inputType === "check" || f.aggregate === "sum");
-  const always = f.startMonth === "" && f.endMonth === "";
-  const showWeekdayPicker = isDaily && !isBook;
-
-  const dayBtns = WEEKDAYS.map((w) =>
-    '<button type="button" class="wd-btn ' + (f.activeDays && f.activeDays.includes(w.i) ? "on" : "") + '" data-action="toggle-day" data-day="' + w.i + '">' + w.l + "</button>"
-  ).join("");
-  const monthOpts = (sel) => MONTHS.map((m) => '<option value="' + m.n + '" ' + (Number(sel) === m.n ? "selected" : "") + ">" + m.label + "</option>").join("");
-
-  let html = '<div class="form-panel">';
-  html += '<div class="form-row"><label>Label</label><input class="input" data-field="label" value="' + esc(f.label) + '" placeholder="e.g. Drink water"></div>';
-  html += '<div class="form-row"><label>Notes (optional)</label><input class="input" data-field="notes" value="' + esc(f.notes) + '" placeholder="A short helper note"></div>';
-  html += '<div class="form-grid">';
-  html += '<div class="form-row"><label>Category</label><select class="select" data-field="category">' + Object.entries(CATEGORIES).map(([k, v]) => '<option value="' + k + '" ' + (f.category === k ? "selected" : "") + ">" + v.label + "</option>").join("") + "</select></div>";
-  if (!isBook) {
-    html += '<div class="form-row"><label>Recurrence</label><select class="select" data-field="recurrence">' + RECURRENCE_OPTIONS.map((r) => '<option value="' + r + '" ' + (f.recurrence === r ? "selected" : "") + ">" + r + "</option>").join("") + "</select></div>";
-  }
-  html += '<div class="form-row"><label>Input type</label><select class="select" data-field="inputType"><option value="check" ' + (f.inputType === "check" ? "selected" : "") + '>Checkbox</option><option value="number" ' + (f.inputType === "number" ? "selected" : "") + '>Number</option><option value="scale" ' + (isScale ? "selected" : "") + '>Scale (0\u201310 buttons)</option><option value="book" ' + (isBook ? "selected" : "") + ">Book / reading progress</option></select></div>";
-  if (isBook) {
-    html += '<div class="form-row"><label>Start page</label><input class="input" type="number" data-field="bookStart" value="' + esc(f.bookStart) + '" placeholder="1"></div>';
-    html += '<div class="form-row"><label>End page</label><input class="input" type="number" data-field="bookEnd" value="' + esc(f.bookEnd) + '" placeholder="320"></div>';
-    html += '<div class="form-row"><label>Daily nudge step (optional)</label><input class="input" type="number" step="any" data-field="stepSize" value="' + esc(f.stepSize) + '" placeholder="5"></div>';
-  } else {
-    if (isNumber || isScale) {
-      html += '<div class="form-row"><label>Unit (optional)</label><input class="input" data-field="unit" value="' + esc(f.unit) + '" placeholder="e.g. glasses, bpm, /10"></div>';
-      html += '<div class="form-row"><label>Aggregate</label><select class="select" data-field="aggregate"><option value="sum" ' + (f.aggregate === "sum" ? "selected" : "") + '>Sum over period</option><option value="latest" ' + (f.aggregate === "latest" ? "selected" : "") + ">Latest value</option></select></div>";
-    }
-    if (isNumber) html += '<div class="form-row"><label>Step size for +/\u2212 buttons (optional)</label><input class="input" type="number" step="any" data-field="stepSize" value="' + esc(f.stepSize) + '" placeholder="e.g. 1 \u2014 leave blank for keyboard input only"></div>';
-  }
-  if (showTarget) html += '<div class="form-row"><label>Target per period</label><input class="input" type="number" data-field="target" value="' + esc(f.target) + '"></div>';
-  html += "</div>";
-  if (showWeekdayPicker) html += '<div class="form-row"><label>Active weekdays (blank = every day)</label><div class="weekday-picker">' + dayBtns + "</div></div>";
-
-  if (isBook) {
-    html += '<div class="form-row"><label>Reading window</label>';
-    html += '<div class="month-selects" style="margin-top:8px;"><input class="input" type="date" data-field="startDateVal" value="' + esc(f.startDateVal || "") + '" style="width:auto;"><span>to</span><input class="input" type="date" data-field="endDateVal" value="' + esc(f.endDateVal || "") + '" style="width:auto;"></div>';
-    html += '<p class="hint">Started reading \u2192 target finish date. The expected-pace line is calculated across this window.</p>';
-    html += "</div>";
-  } else {
-    html += '<div class="form-row"><label>Active window</label>';
-    html += '<label class="always-check"><input type="checkbox" data-action="toggle-use-dates" ' + (f.useDates ? "checked" : "") + "> Use exact date range instead of months</label>";
-    if (f.useDates) {
-      html += '<div class="month-selects" style="margin-top:8px;"><input class="input" type="date" data-field="startDateVal" value="' + esc(f.startDateVal || "") + '" style="width:auto;"><span>to</span><input class="input" type="date" data-field="endDateVal" value="' + esc(f.endDateVal || "") + '" style="width:auto;"></div>';
-    } else {
-      html += '<div class="month-window" style="margin-top:8px;">';
-      html += '<label class="always-check"><input type="checkbox" data-action="toggle-always" ' + (always ? "checked" : "") + "> Active all year</label>";
-      if (!always) html += '<div class="month-selects"><select class="select" data-field="startMonth">' + monthOpts(f.startMonth) + "</select><span>to</span><select class=\"select\" data-field=\"endMonth\">" + monthOpts(f.endMonth) + "</select></div>";
-      html += "</div>";
-    }
-    html += "</div>";
-  }
-  html += '<div class="form-actions"><button class="btn-secondary" data-action="cancel-form">Cancel</button><button class="btn-primary" data-action="save-form">Save task</button></div>';
-  html += "</div>";
-  return html;
-}
-
-function renderManage() {
-  const filter = APP.manageFilter || "all";
-  const filtered = APP.config.filter((t) => filter === "all" || t.recurrence === filter);
-  const chips = ["all"].concat(RECURRENCE_OPTIONS).map((fl) => '<button class="chip ' + (filter === fl ? "on" : "") + '" data-action="set-filter" data-filter="' + fl + '">' + fl + "</button>").join("");
-  const formHtml = APP.form.open ? renderForm() : "";
-  const rows = filtered.map(renderManageRow).join("");
-  return (
-    '<section class="section"><div class="section-head"><span class="section-title">MANAGE TASKS</span></div>' +
-    '<div class="filter-row">' + chips + '<button class="btn-primary add-btn" data-action="add-task">+ Add task</button></div>' +
-    formHtml +
-    '<div class="rows">' + rows + "</div></section>"
-  );
-}
-
-/* ============================== MASTER RENDER ============================== */
-
-function updateTabButtons() {
-  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.getAttribute("data-tab") === APP.tab));
-}
-
-function render() {
-  updateTabButtons();
-  const root = document.getElementById("root");
-  if (!APP.ready) { root.innerHTML = '<p class="empty">Loading your log…</p>'; return; }
-  if (APP.tab === "today") root.innerHTML = renderToday();
-  else if (APP.tab === "workout") root.innerHTML = renderWorkout();
-  else if (APP.tab === "week") root.innerHTML = renderWeek();
-  else if (APP.tab === "month") root.innerHTML = renderMonth();
-  else if (APP.tab === "trends") root.innerHTML = renderTrends();
-  else root.innerHTML = renderManage();
-}
-
-/* ============================== MUTATIONS ============================== */
-
-function setSaveStatus(text) { const el = document.getElementById("save-status"); if (el) el.textContent = text; }
-
-const RETRY_DELAYS = [600, 1500]; // ms before retry attempt 2 and attempt 3
-
-function doPersist(dateKey, taskId, value, attempt) {
-  attempt = attempt || 1;
-  google.script.run
-    .withSuccessHandler(() => setSaveStatus("saved"))
-    .withFailureHandler((err) => {
-      if (attempt < 3) {
-        setSaveStatus("retrying…");
-        setTimeout(() => doPersist(dateKey, taskId, value, attempt + 1), RETRY_DELAYS[attempt - 1]);
-      } else {
-        setSaveStatus("save failed — edit it again to retry");
-        console.error("setEntry failed after retries:", err);
-      }
-    })
-    .setEntry(dateKey, taskId, value);
-}
-const saveTimers = {};
-function debouncedPersist(dateKey, taskId, value) {
-  const key = dateKey + "|" + taskId;
-  if (saveTimers[key]) clearTimeout(saveTimers[key].t);
-  setSaveStatus("saving…");
-  saveTimers[key] = { t: setTimeout(() => doPersist(dateKey, taskId, value), 500), value: value };
-}
-function flushPersist(dateKey, taskId) {
-  const key = dateKey + "|" + taskId;
-  if (saveTimers[key]) { clearTimeout(saveTimers[key].t); const value = saveTimers[key].value; delete saveTimers[key]; doPersist(dateKey, taskId, value); }
-}
-function persistEntryNow(dateKey, taskId, value) { setSaveStatus("saving…"); doPersist(dateKey, taskId, value); }
-
-function toggleTask(dateKey, taskId) {
-  if (!APP.log[dateKey]) APP.log[dateKey] = {};
-  const cur = !!APP.log[dateKey][taskId];
-  APP.log[dateKey][taskId] = !cur;
-  persistEntryNow(dateKey, taskId, !cur);
-  render();
-}
-function togglePeriod(taskId, recurrence, pillKey, controlKey) {
-  const keys = periodKeysFor(recurrence, parseKey(pillKey));
-  const entryDates = keys.filter((k) => APP.log[k] && APP.log[k][taskId]);
-  if (entryDates.length > 0) {
-    // Already satisfied somewhere in this period — unchecking clears every entry in it,
-    // since there's no single "the" day to unset for a once-per-period task.
-    setSaveStatus("saving…");
-    entryDates.forEach((k) => {
-      delete APP.log[k][taskId];
-      doPersist(k, taskId, null);
-    });
-  } else {
-    if (!APP.log[controlKey]) APP.log[controlKey] = {};
-    APP.log[controlKey][taskId] = true;
-    persistEntryNow(controlKey, taskId, true);
-  }
-  render();
-}
-function liveNumberUpdate(dateKey, taskId, raw) {
-  if (!APP.log[dateKey]) APP.log[dateKey] = {};
-  if (raw === "") { delete APP.log[dateKey][taskId]; debouncedPersist(dateKey, taskId, null); }
-  else { const num = Number(raw); if (!isNaN(num)) { APP.log[dateKey][taskId] = num; debouncedPersist(dateKey, taskId, num); } }
-}
-function commitNumber(dateKey, taskId, raw) { liveNumberUpdate(dateKey, taskId, raw); flushPersist(dateKey, taskId); }
-
-function stepNumber(dateKey, taskId, delta) {
-  let cur;
-  if (APP.log[dateKey] && APP.log[dateKey][taskId] != null && APP.log[dateKey][taskId] !== "") {
-    cur = Number(APP.log[dateKey][taskId]);
-  } else {
-    const task = APP.config.find((t) => t.id === taskId);
-    if (task && task.inputType === "book") {
-      const last = latestBookValueAsOf(taskId, dateKey);
-      cur = last != null ? last : (task.bookStart != null ? Number(task.bookStart) : 0);
-    } else {
-      cur = 0;
-    }
-  }
-  let next = cur + Number(delta);
-  if (next < 0) next = 0;
-  next = Math.round(next * 100) / 100;
-  liveNumberUpdate(dateKey, taskId, String(next));
-  flushPersist(dateKey, taskId);
-  render();
-}
-function setScale(dateKey, taskId, value) {
-  if (!APP.log[dateKey]) APP.log[dateKey] = {};
-  const num = Number(value);
-  const cur = APP.log[dateKey][taskId];
-  if (cur === num) { delete APP.log[dateKey][taskId]; persistEntryNow(dateKey, taskId, null); }
-  else { APP.log[dateKey][taskId] = num; persistEntryNow(dateKey, taskId, num); }
-  render();
-}
-
-function openBookRangeEditor(parentId) {
-  const companion = findBookProgressTask(parentId);
-  APP.editingBookRangeFor = parentId;
-  APP.bookRangeForm = companion
-    ? { start: companion.bookStart != null ? companion.bookStart : "", end: companion.bookEnd != null ? companion.bookEnd : "" }
-    : { start: "", end: "" };
-}
-function cancelBookRangeEditor() {
-  APP.editingBookRangeFor = null;
-}
-function saveBookRange(parentId) {
-  const parent = APP.config.find((t) => t.id === parentId);
-  if (!parent) return;
-  const form = APP.bookRangeForm;
-  if (form.start === "" || form.end === "" || isNaN(Number(form.start)) || isNaN(Number(form.end))) {
-    alert("Enter both a start and an end value.");
-    return;
-  }
-  let start, end;
-  if (parent.startDate && parent.endDate) {
-    start = parent.startDate;
-    end = parent.endDate;
-  } else {
-    const rm = parent.startMonth || roadmapMonthOf(startOfDay(new Date()));
-    ({ start, end } = roadmapMonthCalendarRange(rm));
-  }
-  const progressId = bookProgressIdFor(parentId);
-  const cleanLabel = parent.label.replace(/^Read:\s*/i, "").replace(/^FN[\w-]*\s*book:\s*/i, "");
-  const companion = {
-    id: progressId,
-    label: cleanLabel,
-    category: parent.category,
-    recurrence: "daily",
-    inputType: "book",
-    bookMode: "pages",
-    bookStart: Number(form.start),
-    bookEnd: Number(form.end),
-    unit: "pg",
-    aggregate: "latest",
-    step: 5,
-    startDate: start,
-    endDate: end,
-  };
-  const existingIdx = APP.config.findIndex((t) => t.id === progressId);
-  if (existingIdx > -1) APP.config[existingIdx] = companion;
-  else APP.config = APP.config.concat([companion]);
-  APP.editingBookRangeFor = null;
-  persistConfig();
-  render();
-}
-function stopBookTracking(parentId) {
-  if (!confirm("Stop tracking this book's progress? Logged percentages stay in the Sheet but won't show in the app.")) return;
-  const progressId = bookProgressIdFor(parentId);
-  APP.config = APP.config.filter((t) => t.id !== progressId);
-  persistConfig();
-  render();
-}
-
-function persistConfig(attempt) {
-  attempt = attempt || 1;
-  if (attempt === 1) setSaveStatus("saving…");
-  google.script.run
-    .withSuccessHandler(() => setSaveStatus("saved"))
-    .withFailureHandler((err) => {
-      if (attempt < 3) {
-        setSaveStatus("retrying…");
-        setTimeout(() => persistConfig(attempt + 1), RETRY_DELAYS[attempt - 1]);
-      } else {
-        setSaveStatus("save failed — try editing again");
-        console.error("saveConfig failed after retries:", err);
-      }
-    })
-    .saveConfig(APP.config);
-}
-function openAddForm() { APP.form = { open: true, editingId: null, data: Object.assign({}, EMPTY_FORM) }; }
-function openEditForm(id) {
-  const t = APP.config.find((x) => x.id === id);
-  if (!t) return;
-  const hasDates = !!(t.startDate || t.endDate);
-  APP.form = {
-    open: true, editingId: id,
-    data: {
-      label: t.label, notes: t.notes || "", category: t.category, recurrence: t.recurrence, inputType: t.inputType,
-      unit: t.unit || "", target: t.target || 1, aggregate: t.aggregate || "sum", stepSize: t.step != null ? t.step : "",
-      activeDays: t.activeDays ? t.activeDays.slice() : null,
-      useDates: hasDates,
-      startDateVal: t.startDate || "", endDateVal: t.endDate || "",
-      startMonth: !hasDates && t.startMonth != null ? t.startMonth : "",
-      endMonth: !hasDates && t.endMonth != null ? t.endMonth : "",
-      bookMode: t.bookMode || "percent",
-      bookStart: t.bookStart != null ? t.bookStart : "",
-      bookEnd: t.bookEnd != null ? t.bookEnd : "",
-    },
-  };
-}
-function toggleFormDay(day) {
-  const f = APP.form.data;
-  const cur = f.activeDays || [];
-  f.activeDays = cur.includes(day) ? cur.filter((x) => x !== day) : cur.concat([day]);
-}
-function saveForm() {
-  const f = APP.form.data;
-  if (!f.label || !String(f.label).trim()) { alert("Please enter a label."); return; }
-  const clean = { id: APP.form.editingId || uid(), label: String(f.label).trim(), category: f.category, recurrence: f.recurrence, inputType: f.inputType };
-  if (f.notes && String(f.notes).trim()) clean.notes = String(f.notes).trim();
-
-  if (f.inputType === "book") {
-    if (!f.startDateVal || !f.endDateVal) { alert("Book tracking needs both a start date and a target finish date."); return; }
-    clean.recurrence = "daily";
-    clean.bookMode = "pages";
-    clean.bookStart = f.bookStart === "" || f.bookStart == null ? 1 : Number(f.bookStart);
-    clean.bookEnd = f.bookEnd === "" || f.bookEnd == null ? 100 : Number(f.bookEnd);
-    clean.unit = "pg";
-    clean.aggregate = "latest";
-    clean.startDate = f.startDateVal;
-    clean.endDate = f.endDateVal;
-    clean.step = f.stepSize !== "" && f.stepSize != null && !isNaN(Number(f.stepSize)) ? Number(f.stepSize) : 5;
-  } else {
-    if (f.inputType === "number" || f.inputType === "scale") {
-      if (f.unit && String(f.unit).trim()) clean.unit = String(f.unit).trim();
-      clean.aggregate = f.aggregate || "sum";
-    }
-    if (f.inputType === "number" && f.stepSize !== "" && f.stepSize != null && !isNaN(Number(f.stepSize))) clean.step = Number(f.stepSize);
-    if (f.recurrence !== "daily" && (f.inputType === "check" || clean.aggregate === "sum")) clean.target = Number(f.target) || 1;
-    if (f.recurrence === "daily" && f.activeDays && f.activeDays.length > 0) clean.activeDays = f.activeDays.slice();
-    if (f.useDates) {
-      if (f.startDateVal) clean.startDate = f.startDateVal;
-      if (f.endDateVal) clean.endDate = f.endDateVal;
-    } else if (f.startMonth !== "" && f.endMonth !== "" && f.startMonth != null && f.endMonth != null) {
-      clean.startMonth = Number(f.startMonth);
-      clean.endMonth = Number(f.endMonth);
-    }
-  }
-
-  if (APP.form.editingId) APP.config = APP.config.map((t) => (t.id === APP.form.editingId ? clean : t));
-  else APP.config = APP.config.concat([clean]);
-  APP.form.open = false;
-  persistConfig();
-  render();
-}
-function deleteTask(id) {
-  if (!confirm("Delete this task? Past log entries for it stay in the sheet but won't show in the app.")) return;
-  APP.config = APP.config.filter((t) => t.id !== id);
-  persistConfig();
-  render();
-}
-
-/* ============================== EVENTS ============================== */
-
-function onClick(e) {
-  const tabBtn = e.target.closest("[data-tab]");
-  if (tabBtn) { APP.tab = tabBtn.getAttribute("data-tab"); render(); return; }
-
-  const actionEl = e.target.closest("[data-action]");
-  if (!actionEl) return;
-  const action = actionEl.getAttribute("data-action");
-
-  if (action === "toggle-mve") { APP.mveMode = !APP.mveMode; render(); }
-  else if (action === "enter-mve") { APP.mveMode = true; render(); }
-  else if (action === "prev-day") { APP.selected = addDays(APP.selected, -1); render(); }
-  else if (action === "next-day") { APP.selected = addDays(APP.selected, 1); render(); }
-  else if (action === "jump-today") { APP.selected = new Date(); render(); }
-  else if (action === "prev-week") { APP.selected = addDays(APP.selected, -7); render(); }
-  else if (action === "next-week") { APP.selected = addDays(APP.selected, 7); render(); }
-  else if (action === "jump-week") { APP.selected = new Date(); render(); }
-  else if (action === "prev-month") { const d = APP.selected; APP.selected = new Date(d.getFullYear(), d.getMonth() - 1, 1); render(); }
-  else if (action === "next-month") { const d = APP.selected; APP.selected = new Date(d.getFullYear(), d.getMonth() + 1, 1); render(); }
-  else if (action === "jump-month") { APP.selected = new Date(); render(); }
-  else if (action === "set-filter") { APP.manageFilter = actionEl.getAttribute("data-filter"); render(); }
-  else if (action === "add-task") { openAddForm(); render(); }
-  else if (action === "add-book-shortcut") {
-    APP.tab = "manage";
-    openAddForm();
-    APP.form.data.inputType = "book";
-    APP.form.data.category = "learning";
-    render();
-  }
-  else if (action === "open-book-range") { openBookRangeEditor(actionEl.getAttribute("data-parent")); render(); }
-  else if (action === "cancel-book-range") { cancelBookRangeEditor(); render(); }
-  else if (action === "save-book-range") { saveBookRange(actionEl.getAttribute("data-parent")); }
-  else if (action === "stop-book-tracking") { stopBookTracking(actionEl.getAttribute("data-parent")); }
-  else if (action === "edit-task") { openEditForm(actionEl.getAttribute("data-id")); render(); }
-  else if (action === "delete-task") { deleteTask(actionEl.getAttribute("data-id")); }
-  else if (action === "cancel-form") { APP.form.open = false; render(); }
-  else if (action === "save-form") { saveForm(); }
-  else if (action === "toggle-day") { toggleFormDay(Number(actionEl.getAttribute("data-day"))); render(); }
-  else if (action === "step") { stepNumber(actionEl.getAttribute("data-date"), actionEl.getAttribute("data-task"), Number(actionEl.getAttribute("data-delta"))); }
-  else if (action === "scale") { setScale(actionEl.getAttribute("data-date"), actionEl.getAttribute("data-task"), actionEl.getAttribute("data-value")); }
-}
-
-function onChange(e) {
-  const el = e.target;
-  if (el.matches('[data-action="toggle"]')) { toggleTask(el.getAttribute("data-date"), el.getAttribute("data-task")); return; }
-  if (el.matches('[data-action="toggle-period"]')) { togglePeriod(el.getAttribute("data-task"), el.getAttribute("data-recurrence"), el.getAttribute("data-pillkey"), el.getAttribute("data-date")); return; }
-  if (el.matches('[data-action="number"]')) { commitNumber(el.getAttribute("data-date"), el.getAttribute("data-task"), el.value); render(); return; }
-  if (el.matches('[data-action="toggle-always"]')) {
-    if (el.checked) { APP.form.data.startMonth = ""; APP.form.data.endMonth = ""; }
-    else { APP.form.data.startMonth = 1; APP.form.data.endMonth = 12; }
-    render(); return;
-  }
-  if (el.matches('[data-action="toggle-use-dates"]')) { APP.form.data.useDates = el.checked; render(); return; }
-  if (el.matches('[data-action="metric-select"]')) { APP.trendsMetricId = el.value; render(); return; }
-  if (el.matches('[data-action="toggle-trends-avg"]')) { APP.trendsShowAvg = el.checked; render(); return; }
-  if (el.hasAttribute("data-bookrange-field")) {
-    APP.bookRangeForm[el.getAttribute("data-bookrange-field")] = el.value;
-    if (el.tagName === "SELECT") render();
-    return;
-  }
-  if (el.hasAttribute("data-field")) {
-    const field = el.getAttribute("data-field");
-    let val = el.value;
-    if (field === "target" || field === "startMonth" || field === "endMonth") val = Number(val);
-    APP.form.data[field] = val;
-    if (el.tagName === "SELECT") render();
-  }
-}
-
-function onInput(e) {
-  const el = e.target;
-  if (el.matches('[data-action="number"]')) { liveNumberUpdate(el.getAttribute("data-date"), el.getAttribute("data-task"), el.value); return; }
-  if (el.hasAttribute("data-bookrange-field")) { APP.bookRangeForm[el.getAttribute("data-bookrange-field")] = el.value; return; }
-  if (el.tagName === "INPUT" && el.hasAttribute("data-field")) { APP.form.data[el.getAttribute("data-field")] = el.value; }
-}
-
-/* ============================== INIT ============================== */
-
-function onDataLoaded(data) {
-  APP.config = data.config || [];
-  APP.log = data.log || {};
-  APP.ready = true;
-  setSaveStatus("");
-  render();
-}
-function onLoadError(err) {
-  document.getElementById("root").innerHTML = '<p class="empty">Couldn\u2019t load data (' + esc((err && err.message) || err) + '). Reload the page to try again.</p>';
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("app").addEventListener("click", onClick);
-  document.getElementById("app").addEventListener("change", onChange);
-  document.getElementById("app").addEventListener("input", onInput);
-  setSaveStatus("loading…");
-  google.script.run.withSuccessHandler(onDataLoaded).withFailureHandler(onLoadError).getAppData();
 });
+layers["🏘️ Sectors"] = L.layerGroup(sectorItems);
+
+layers["🧒 EuroKids"] = L.markerClusterGroup({ maxClusterRadius: 40 });
+EUROKIDS.forEach(e => layers["🧒 EuroKids"].addLayer(L.marker([e.lat,e.lng], { icon: pinIcon("🧒","#f59e0b") }).bindPopup(`<b>🧒 ${e.name}</b>${e.note?`<br><span class="pop-tag">${e.note}</span>`:""}`)));
+
+layers["🎓 Schools"] = L.markerClusterGroup({ maxClusterRadius: 40 });
+SCHOOLS.forEach(s => layers["🎓 Schools"].addLayer(L.marker([s.lat,s.lng], { icon: pinIcon("🎓","#2e7d43") }).bindPopup(`<b>🎓 ${s.name}</b>`)));
+
+layers["🚇 Metro"] = L.layerGroup(METRO.map(m => L.marker([m.lat,m.lng], { icon: pinIcon("🚇","#6a3fa0") }).bindPopup(`<b>🚇 ${m.name}</b>`)));
+
+layers["🏥 Hospitals"] = L.markerClusterGroup({ maxClusterRadius: 40 });
+HOSPITALS.forEach(h => layers["🏥 Hospitals"].addLayer(L.marker([h.lat,h.lng], { icon: pinIcon("🏥","#b02a37") }).bindPopup(`<b>🏥 ${h.name}</b>`)));
+
+layers["✈️ Airport & Rail"] = L.layerGroup(AIRPORT_RAIL.map(l =>
+  L.marker([l.lat,l.lng], { icon: pinIcon(l.em,"#8a6d1c",34) })
+    .bindPopup(`<b>${l.em} ${l.name}</b><br><span class="pop-tag">📏 ${distanceProvider.label(l,OFFICE)}${distanceProvider.isEstimate?" (straight-line)":""}</span>`)
+));
+layers["🛒 Markets"] = L.layerGroup(MARKETS.map(m => L.marker([m.lat,m.lng], { icon: pinIcon("🛒","#3a6ea5") }).bindPopup(`<b>🛒 ${m.name}</b>`)));
+layers["🌳 Parks"] = L.layerGroup(PARKS.map(p => L.marker([p.lat,p.lng], { icon: pinIcon("🌳","#4c9a58") }).bindPopup(`<b>🌳 ${p.name}</b>`)));
+layers["🏠 Houses"] = L.markerClusterGroup({ maxClusterRadius: 35, disableClusteringAtZoom: 15 });
+
+const defaultOff = new Set(["🌳 Parks","🛒 Markets","🎓 Schools"]);
+const chipsDiv = document.getElementById("chips");
+Object.entries(layers).forEach(([name, layer]) => {
+  const on = !defaultOff.has(name);
+  if (on) layer.addTo(map);
+  const chip = document.createElement("button");
+  chip.className = "chip" + (on ? " on" : "");
+  chip.textContent = name;
+  chip.addEventListener("click", () => {
+    if (map.hasLayer(layer)) { map.removeLayer(layer); chip.classList.remove("on"); }
+    else { layer.addTo(map); chip.classList.add("on"); }
+  });
+  chipsDiv.appendChild(chip);
+});
+
+/* ---- Drawer ---- */
+const drawer = document.getElementById("drawer");
+const caret = document.getElementById("drawerCaret");
+document.getElementById("drawerHead").addEventListener("click", () => {
+  drawer.classList.toggle("collapsed");
+  caret.textContent = drawer.classList.contains("collapsed") ? "▲ show" : "▼ hide";
+});
+
+/* ---- Add house button ---- */
+document.getElementById("addHouseBtn").addEventListener("click", () => {
+  if (GOOGLE_FORM_URL) window.open(GOOGLE_FORM_URL, "_blank");
+  else alert("Paste your Google Form URL into GOOGLE_FORM_URL at the top of the file first.");
+});
+
+/* ---- Filters ---- */
+const rentSlider = document.getElementById("rentSlider");
+const rentVal = document.getElementById("rentVal");
+const hideRejected = document.getElementById("hideRejected");
+const searchBox = document.getElementById("searchBox");
+rentSlider.addEventListener("input", () => { rentVal.textContent = "₹" + Number(rentSlider.value).toLocaleString("en-IN"); renderHouses(); });
+hideRejected.addEventListener("change", renderHouses);
+searchBox.addEventListener("input", renderHouses);
+
+/* ---- Distance spider ---- */
+let spiderLayer = L.layerGroup().addTo(map);
+function drawSpider(house){
+  spiderLayer.clearLayers();
+  const targets = [
+    { label:"🏢 Office", point: OFFICE },
+    { label:"🚇 Metro", point: nearest(house, METRO).place, km: nearest(house, METRO).km },
+    { label:"🧒 EuroKids", point: nearest(house, EUROKIDS).place, km: nearest(house, EUROKIDS).km },
+    { label:"🏥 Hospital", point: nearest(house, HOSPITALS).place, km: nearest(house, HOSPITALS).km },
+  ];
+  targets.forEach(t => {
+    if (!t.point) return;
+    const km = t.km || distanceProvider.km(house, t.point).toFixed(1);
+    spiderLayer.addLayer(L.polyline([[house.lat,house.lng],[t.point.lat,t.point.lng]], { color:"#16233b", weight:1.5, dashArray:"3 5", opacity:0.7 }));
+    const mid = [(house.lat+t.point.lat)/2, (house.lng+t.point.lng)/2];
+    spiderLayer.addLayer(L.marker(mid, { icon: L.divIcon({ className:"", html:`<div class="spider-label">${t.label} ${km}km</div>`, iconSize:[0,0] }) }));
+  });
+}
+map.on("click", () => spiderLayer.clearLayers());
+
+/* ---- Houses ---- */
+const statusMeta = {
+  "scheduled":   { em:"🔘", color:"#7a8699" },
+  "to visit":    { em:"🟠", color:"#e8930c" },
+  "visited":     { em:"🔵", color:"#3a6ea5" },
+  "shortlisted": { em:"🟢", color:"#2e7d43" },
+  "negotiating": { em:"🤝", color:"#8a4fbf" },
+  "final":       { em:"✅", color:"#1b7a3d" },
+  "rejected":    { em:"⚪", color:"#9aa3b2" }
+};
+let houseRows = [];
+
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", inQ=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (inQ){ if (c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else inQ=false; } else cell+=c; }
+    else {
+      if (c==='"') inQ=true;
+      else if (c===","){ row.push(cell); cell=""; }
+      else if (c==="\n"||c==="\r"){ if(cell!==""||row.length){row.push(cell);rows.push(row);row=[];cell="";} }
+      else cell+=c;
+    }
+  }
+  if (cell!==""||row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function driveThumb(url){
+  if (!url) return null;
+  const m = url.match(/[-\w]{25,}/); // Drive file ID pattern
+  if (m) return `https://drive.google.com/uc?export=view&id=${m[0]}`;
+  return url; // assume direct image URL otherwise
+}
+
+function computeScore(h){
+  let weightedSum = 0, weightTotal = 0;
+  Object.entries(SCORE_WEIGHTS).forEach(([key, weight]) => {
+    const v = parseFloat(h[key]);
+    if (!isNaN(v)) { weightedSum += (v/5)*weight; weightTotal += weight; }
+  });
+  if (!weightTotal) return null;
+  return Math.round((weightedSum / weightTotal) * 100);
+}
+
+function ratingBars(h){
+  const labels = { rCommute:"🚗 Commute", rSafety:"🛡️ Safety", rPreschool:"🧒 Preschool", rParking:"🅿️ Parking",
+    rVentilation:"🌬️ Ventilation", rRentValue:"💰 Rent value", rSociety:"🏘️ Society" };
+  const rows = Object.entries(labels).map(([key,label]) => {
+    const v = parseFloat(h[key]);
+    if (isNaN(v)) return "";
+    const pct = (v/5)*100;
+    return `<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:10.5px;">
+      <span style="width:82px;flex-shrink:0;">${label}</span>
+      <span style="flex:1;background:#eef1f5;border-radius:4px;height:7px;overflow:hidden;">
+        <span style="display:block;height:100%;width:${pct}%;background:${scoreRingColor(pct)};"></span>
+      </span>
+      <span style="width:16px;text-align:right;">${v}</span>
+    </div>`;
+  }).join("");
+  return rows ? `<div class="box conn"><b>📊 Ratings (weighted by your priorities)</b>${rows}</div>` : "";
+}
+
+function findSector(areaName){
+  if (!areaName) return null;
+  const q = areaName.toLowerCase();
+  return SECTORS.find(s => s.name.toLowerCase().includes(q) || q.includes(s.name.toLowerCase().split(",")[0].split("(")[0].trim().toLowerCase())) || null;
+}
+
+function daysSince(ts){
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (isNaN(d)) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function nudgeFor(h){
+  const days = daysSince(h.ts);
+  const st = (h.status||"").toLowerCase();
+  if (st === "negotiating" && days !== null && days >= 7) return `⚠️ Negotiating for ${days} days`;
+  if (st === "to visit" && days !== null && days >= 10) return `⚠️ Logged ${days} days ago, not visited yet`;
+  if (!h.notes && (st === "visited" || st === "shortlisted")) return `⚠️ No notes added yet`;
+  return null;
+}
+function updateStats(visibleRows){
+  const total = visibleRows.length;
+  let rentSum=0, rentN=0, cheapest=null, best=null;
+  const areaCounts = {};
+  visibleRows.forEach(h => {
+    const r = parseFloat(h.rent);
+    if (!isNaN(r)){ rentSum+=r; rentN++; if (!cheapest || r<parseFloat(cheapest.rent)) cheapest=h; }
+    if (h.area) areaCounts[h.area] = (areaCounts[h.area]||0)+1;
+    const sc = computeScore(h);
+    if (sc!==null && (!best || sc>best.score)) best = { h, score: sc };
+  });
+  const avgRent = rentN ? Math.round(rentSum/rentN).toLocaleString("en-IN") : "—";
+  let topArea = "—", topAreaN = 0;
+  Object.entries(areaCounts).forEach(([a,n]) => { if (n>topAreaN){topArea=a;topAreaN=n;} });
+  const negotiatingN = visibleRows.filter(h => (h.status||"").toLowerCase()==="negotiating").length;
+  const statsDiv = document.getElementById("stats");
+  statsDiv.innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">🏠 Tracked</div></div>
+    <div class="stat"><div class="num" style="font-size:11px;">${best ? best.h.name : "—"}</div><div class="lbl">🏆 Best (${best?best.score:"—"})</div></div>
+    <div class="stat"><div class="num" style="font-size:12px;">${cheapest ? "₹"+Number(cheapest.rent).toLocaleString("en-IN") : "—"}</div><div class="lbl">💸 Cheapest</div></div>
+    <div class="stat"><div class="num">${negotiatingN}</div><div class="lbl">🤝 Negotiating</div></div>
+    <div class="stat"><div class="num">₹${avgRent}</div><div class="lbl">💰 Avg rent</div></div>
+    <div class="stat"><div class="num" style="font-size:12px;">${topArea}</div><div class="lbl">📍 Most tracked</div></div>
+  `;
+}
+
+function renderActivity(rows){
+  const feed = document.getElementById("activityFeed");
+  const sorted = [...rows].filter(r=>r.ts).sort((a,b)=> new Date(b.ts) - new Date(a.ts)).slice(0,8);
+  feed.innerHTML = sorted.map(h => `<div class="activity-row"><b>${h.name}</b> — ${h.status||"to visit"} <br>${h.ts}</div>`).join("") || `<div class="activity-row">No timestamped entries yet.</div>`;
+}
+
+function renderHouses(){
+  layers["🏠 Houses"].clearLayers();
+  const listEl = document.getElementById("houseList");
+  const sideListEl = document.getElementById("sideHouseList");
+  listEl.innerHTML = ""; sideListEl.innerHTML = "";
+
+  const maxRent = Number(rentSlider.value);
+  const hideRej = hideRejected.checked;
+  const q = searchBox.value.trim().toLowerCase();
+
+  const visible = houseRows.filter(h => {
+    const r = parseFloat(h.rent);
+    if (!isNaN(r) && r > maxRent) return false;
+    if (hideRej && (h.status||"").toLowerCase()==="rejected") return false;
+    if (q && !`${h.name} ${h.area} ${h.contact} ${h.notes} ${h.status}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  visible.forEach(h => {
+    const meta = statusMeta[(h.status||"to visit").toLowerCase()] || statusMeta["to visit"];
+    const distKm = distanceProvider.label(h, OFFICE);
+    const score = computeScore(h);
+    const thumb = driveThumb(h.photo);
+    const sector = findSector(h.area);
+    const nudge = nudgeFor(h);
+    const distId = "dist_" + Math.random().toString(36).slice(2);
+
+    const popupParts = [
+      `<div class="card-title">🏠 ${h.name}</div>`,
+      thumb ? `<img class="house-photo" src="${thumb}" onerror="this.style.display='none'">` : "",
+      score!==null ? `<div class="card-stars">Score: <b>${score}/100</b> (weighted by your priorities)</div>` : "",
+      sector ? `<div class="box conn"><b>🏘️ #${sector.rank} ${sector.name}</b>${stars(sector.stars)} · ${(CONFIDENCE[sector.confidence]||CONFIDENCE.unvalidated).label}<br>
+        Known issues: ${sector.cons[0]||"—"}</div>` : "",
+      nudge ? `<div class="box cons"><b>${nudge}</b></div>` : "",
+      `<div class="box conn"><b>📍 ${h.area||""}</b>
+        💰 ₹${h.rent||"?"}/mo · 📐 ${h.sqft||"?"} sqft · ${h.furnishing||""}<br>
+        🔧 Maintenance: ${h.maint||"?"} · 📞 ${h.contact||""}<br>
+        <span class="pop-tag" id="${distId}">📏 ${distKm}${distanceProvider.isEstimate?" (straight-line)":""} to office</span></div>`,
+      ratingBars(h),
+      h.notes ? `<div class="box verify"><b>📝 Notes</b>${h.notes}</div>` : "",
+      `<span class="status-pill" style="background:${meta.color}">${meta.em} ${h.status||"to visit"}</span>`
+    ];
+
+    const marker = L.marker([h.lat,h.lng], { icon: pinIcon("🏠", meta.color, 30) }).bindPopup(popupParts.join(""));
+    marker.on("click", () => {
+      drawSpider(h);
+      if (ORS_API_KEY) distanceProvider.travelTimeMin(h, OFFICE, min => {
+        const el = document.getElementById(distId);
+        if (el) el.innerHTML = `📏 🚗 ${min} min drive to office`;
+      });
+    });
+    layers["🏠 Houses"].addLayer(marker);
+
+    const ringColor = score!==null ? scoreRingColor(score) : "#c7cedb";
+    const cardHtml = `
+      ${thumb ? `<img class="thumb" src="${thumb}" onerror="this.style.display='none'">` : `<div class="thumb"></div>`}
+      <div class="body">
+        <div class="name">🏠 ${h.name} — ₹${h.rent||"?"}</div>
+        <div class="meta">${h.area||""} · 📏 ${distKm}${nudge?" · "+nudge:""}</div>
+        <span class="status-pill" style="background:${meta.color}">${meta.em} ${h.status||"to visit"}</span>
+      </div>
+      ${score!==null ? `<div class="score-ring" style="background:${ringColor}">${score}</div>` : ""}
+    `;
+
+    [listEl, sideListEl].forEach(container => {
+      const item = document.createElement("div");
+      item.className = "house-item";
+      item.innerHTML = cardHtml;
+      item.addEventListener("click", () => {
+        map.setView([h.lat,h.lng], 15); marker.openPopup(); drawSpider(h);
+        if (window.innerWidth < 900) { drawer.classList.add("collapsed"); caret.textContent = "▲ show"; }
+      });
+      container.appendChild(item);
+    });
+  });
+
+  updateStats(visible);
+  renderActivity(visible);
+  const statusText = visible.length ? `✅ ${visible.length} shown` : "No houses match current filters.";
+  document.getElementById("houseStatus").textContent = statusText;
+  document.getElementById("sideHouseStatus").textContent = statusText;
+}
+
+function loadHouses(){
+  document.getElementById("houseStatus").textContent = "Loading…";
+  document.getElementById("sideHouseStatus").textContent = "Loading…";
+  if (!HOUSES_CSV_URL){
+    houseRows = []; renderHouses();
+    const msg = "📋 Google Sheet not connected yet.";
+    document.getElementById("houseStatus").textContent = msg;
+    document.getElementById("sideHouseStatus").textContent = msg;
+    return;
+  }
+  fetch(HOUSES_CSV_URL + (HOUSES_CSV_URL.includes("?")?"&":"?") + "cachebust=" + Date.now())
+    .then(r => { if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
+    .then(text => {
+      const rows = parseCSV(text).slice(1);
+      houseRows = rows.map(r => {
+        const [ts,name,area,coords,rent,sqft,furnishing,maint,contact,notes,status,photo,
+               rCommute,rSafety,rPreschool,rParking,rVentilation,rRentValue,rSociety] = r;
+        if (!coords) return null;
+        const m = coords.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
+        if (!m) return null;
+        const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+        if (isNaN(lat)||isNaN(lng)) return null;
+        return { ts,name,area,lat,lng,rent,sqft,furnishing,maint,contact,notes,
+          status:(status||"to visit").trim().toLowerCase(), photo,
+          rCommute,rSafety,rPreschool,rParking,rVentilation,rRentValue,rSociety };
+      }).filter(Boolean);
+      renderHouses();
+    })
+    .catch(err => {
+      const msg = "⚠️ Couldn't fetch sheet (" + err.message + ").";
+      document.getElementById("houseStatus").textContent = msg;
+      document.getElementById("sideHouseStatus").textContent = msg;
+    });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", loadHouses);
+loadHouses();
 </script>
 </body>
 </html>
