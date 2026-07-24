@@ -151,13 +151,13 @@
 
 <script>
 /* ================= CONFIG ================= */
-const HOUSES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQIsixCAfnktAk6jYQ7MKQ44KmVYhYlxlfsNVhekbvyK4EeUmstcOq7DzKRev45WL8-8cLlo2sM2KM/pub?gid=913130710&single=true&output=csv";
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdx6_KpEUKPufcd84QG0XbzqhLQtFUOgCFB0L1686FOgd7nSg/viewform?usp=publish-editor"; // paste your Google Form share link here for the "+ Add house" button
+const HOUSES_CSV_URL = "";
+const GOOGLE_FORM_URL = ""; // paste your Google Form share link here for the "+ Add house" button
 
 /* Optional: paste a free OpenRouteService API key (openrouteservice.org/dev/#/signup,
    2000 req/day free, no card needed) to switch from straight-line distance to real
    driving time. Leave "" to keep straight-line — nothing else breaks either way. */
-const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0MTNjOTUyM2VmMzQ1YmY5NjJlZjRlN2JkOGExZjE5IiwiaCI6Im11cm11cjY0In0=";
+const ORS_API_KEY = "";
 
 /* Scoring weights — must sum to 100. Adjust to match what actually matters to you. */
 const SCORE_WEIGHTS = { rCommute:20, rSafety:25, rPreschool:20, rParking:15, rVentilation:5, rRentValue:5, rSociety:10 };
@@ -214,16 +214,21 @@ const SECTORS = [
 ];
 
 const EUROKIDS = [
-  { name:"EuroKids Sector 84", lat:28.3975, lng:76.9538, note:"Curriculum inspired by Harvard's Project Zero" },
-  { name:"EuroKids Sector 21", lat:28.5064, lng:77.0673, note:"Active daycare facilities" },
-  { name:"EuroKids Dwarka Expressway (Sector 106)", lat:28.4952, lng:76.9921, note:"Spacious Montessori setup" },
-  { name:"EuroKids Sector 37C", lat:28.4552, lng:76.9794, note:"CCTV-enabled campus next to Taksila Heights" },
-  { name:"EuroKids Sector 52 (Ardee City)", lat:28.4358, lng:77.0811, note:"Play-based learning" },
-  { name:"EuroKids Sushant Lok 1 (Sector 28)", lat:28.4689, lng:77.0874, note:"Personalized individual attention" },
-  { name:"EuroKids Sector 86 (Badha)", lat:28.4014, lng:76.9422, note:"Ample open outdoor space" },
+  /* Verified against EuroKids' official branch directory (13 branches in Gurugram).
+     Coordinates approximate — refine via Google Maps long-press if a branch becomes decision-critical. */
+  { name:"EuroKids Sector 40 (Mohyal Colony)", lat:28.4500, lng:77.0560, note:"Opp. HSIDC Apartments — borders South City I" },
+  { name:"EuroKids Sector 46 (Huda Colony)", lat:28.4419, lng:77.0583, note:"Near VS Residency" },
+  { name:"EuroKids Sector 52 (Ardee City)", lat:28.4358, lng:77.0811, note:"C9/1, Road C9, Ardee City" },
+  { name:"EuroKids Sector 49 (Sispal Vihar, Sohna Rd)", lat:28.4100, lng:77.0500, note:"AWHO Society — near Malibu Town" },
   { name:"EuroKids Sector 50 (Nirvana Country)", lat:28.4162, lng:77.0628, note:"Near Fresco residential complex" },
-  { name:"EuroKids New Palam Vihar Phase 2 (Sector 112)", lat:28.5147, lng:77.0143, note:"Visual thinking curriculum" },
-  { name:"EuroKids Sector 46 (Huda Colony)", lat:28.4419, lng:77.0583, note:"Deep within Huda Colony" },
+  { name:"EuroKids DLF Phase 2 (Sector 25)", lat:28.4780, lng:77.0890, note:"Akashneem Marg — serves Sushant Lok/DLF side" },
+  { name:"EuroKids Sushant Lok 1 ⚠️", lat:28.4689, lng:77.0874, note:"Address conflict in listings (Ashok Vihar vs Block A Sushant Lok) — call +91-9513170870 to confirm location before relying on it" },
+  { name:"EuroKids Sector 21", lat:28.5064, lng:77.0673, note:"Near Palam Vihar Extension / Udyog Vihar Ph 2" },
+  { name:"EuroKids Palam Vihar (Block C2)", lat:28.5130, lng:77.0350, note:"Opposite Community Centre" },
+  { name:"EuroKids New Palam Vihar Phase 2 (Sector 112)", lat:28.5147, lng:77.0143, note:"Plot F-436" },
+  { name:"EuroKids Sector 37C", lat:28.4552, lng:76.9794, note:"Near Taksila Heights" },
+  { name:"EuroKids Sector 82 (Vatika Primrose Avenue)", lat:28.3990, lng:76.9640, note:"Far southwest — not near shortlist" },
+  { name:"EuroKids Dwarka Expressway (Daulatabad)", lat:28.4952, lng:76.9921, note:"Far west — not near shortlist" },
 ];
 const SCHOOLS = [
   { name:"DPS, Sector 45 — AAAAA · ₹1.35L/yr", lat:28.4460, lng:77.0700 },
