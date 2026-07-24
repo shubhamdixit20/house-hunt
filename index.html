@@ -151,13 +151,13 @@
 
 <script>
 /* ================= CONFIG ================= */
-const HOUSES_CSV_URL = "";
-const GOOGLE_FORM_URL = ""; // paste your Google Form share link here for the "+ Add house" button
+const HOUSES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQIsixCAfnktAk6jYQ7MKQ44KmVYhYlxlfsNVhekbvyK4EeUmstcOq7DzKRev45WL8-8cLlo2sM2KM/pub?gid=913130710&single=true&output=csv";
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdx6_KpEUKPufcd84QG0XbzqhLQtFUOgCFB0L1686FOgd7nSg/viewform?usp=publish-editor"; // paste your Google Form share link here for the "+ Add house" button
 
 /* Optional: paste a free OpenRouteService API key (openrouteservice.org/dev/#/signup,
    2000 req/day free, no card needed) to switch from straight-line distance to real
    driving time. Leave "" to keep straight-line — nothing else breaks either way. */
-const ORS_API_KEY = "";
+const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0MTNjOTUyM2VmMzQ1YmY5NjJlZjRlN2JkOGExZjE5IiwiaCI6Im11cm11cjY0In0=";
 
 /* Scoring weights — must sum to 100. Adjust to match what actually matters to you. */
 const SCORE_WEIGHTS = { rCommute:20, rSafety:25, rPreschool:20, rParking:15, rVentilation:5, rRentValue:5, rSociety:10 };
