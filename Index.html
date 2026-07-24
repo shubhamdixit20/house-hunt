@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="12-Month Engine">
+<title>The 12-Month Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+html, body { margin: 0; padding: 0; background: #1A2024; }
+* { box-sizing: border-box; }
+
+.app {
+  --bg: #1A2024;
+  --surface: #232A2F;
+  --surface2: #2A3238;
+  --border: rgba(255,255,255,0.08);
+  --text: #E4E9EA;
+  --text-secondary: #94A3A8;
+  --text-tertiary: #66757A;
+  --accent: #74A6A0;
+  --accent-ink: #142023;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 14px 16px 56px;
+  min-height: 100vh;
+}
+@media (prefers-reduced-motion: reduce) { .app * { transition: none !important; animation: none !important; } }
+.app *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex: 1; overflow-x: auto; white-space: nowrap; }
+.tabs button { background: none; border: none; color: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; letter-spacing: 0.03em; padding: 9px 3px; margin-right: 12px; cursor: pointer; border-bottom: 2px solid transparent; flex-shrink: 0; }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+.save-status { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--text-tertiary); white-space: nowrap; padding-left: 8px; }
+
+.eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--text-tertiary); }
+.hdr { margin: 18px 0 18px; }
+.hdr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.mve-toggle { font-family: "IBM Plex Mono", monospace; font-size: 11px; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.mve-toggle.active { color: var(--accent); border-color: var(--accent); }
+.hdr-main { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.hdr-main h1 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 26px; margin: 0; }
+.quarter-badge { font-family: "IBM Plex Mono", monospace; font-size: 11px; border: 1px solid; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.month-theme { color: var(--text-secondary); font-size: 13px; margin: 4px 0 12px; font-style: italic; }
+
+.odometer { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-bottom: 14px; }
+.odo-seg { height: 6px; border-radius: 2px; }
+
+.day-nav { display: flex; align-items: center; gap: 10px; }
+.day-nav button { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 6px 10px; cursor: pointer; font-size: 16px; line-height: 1; }
+.day-nav button:disabled { opacity: 0.35; cursor: default; }
+.day-label { flex: 1; display: flex; flex-direction: column; }
+.day-name { font-size: 14px; font-weight: 600; }
+.day-date { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); }
+.jump-today { font-family: "IBM Plex Mono", monospace; font-size: 11px !important; padding: 5px 9px !important; color: var(--accent); }
+
+.banner { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; }
+.banner p { margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.banner button { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 5px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+.section { margin-bottom: 22px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
+.section-title { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-secondary); }
+.section-count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--accent); }
+.empty { color: var(--text-tertiary); font-size: 13px; font-style: italic; margin: 4px 0; }
+.hint { color: var(--text-tertiary); font-size: 11px; margin-top: 8px; }
+
+.rows { display: flex; flex-direction: column; gap: 1px; }
+.task-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 6px; background: var(--surface); margin-bottom: 4px; }
+.task-row.readonly { opacity: 0.6; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.task-main { flex: 1; min-width: 0; }
+.task-label { font-size: 13.5px; line-height: 1.35; }
+.task-notes { font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+.pill { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); background: var(--surface2); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.pill-on { color: var(--accent-ink); background: var(--accent); }
+.task-control { flex-shrink: 0; }
+.chk { width: 19px; height: 19px; accent-color: var(--accent); cursor: pointer; }
+.num-wrap { display: flex; align-items: center; gap: 4px; }
+.num { width: 64px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); padding: 5px 7px; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+.unit { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
+.step-btn { width: 26px; height: 26px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.step-btn:active { background: var(--accent); color: var(--accent-ink); }
+
+.task-row.scale-task { flex-direction: column; align-items: stretch; gap: 8px; }
+.task-row-top { display: flex; align-items: center; gap: 10px; }
+.scale-row { display: flex; gap: 4px; flex-wrap: wrap; padding-left: 17px; }
+.scale-btn { width: 24px; height: 24px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 10px; cursor: pointer; }
+.scale-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+
+.task-row.book-task { flex-direction: column; align-items: stretch; gap: 4px; }
+.book-track { position: relative; height: 6px; background: var(--surface2); border-radius: 3px; margin: 6px 0 2px 17px; overflow: hidden; }
+.book-track-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.book-track-target { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); }
+.book-pace { padding-left: 17px; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); }
+.pace-ahead { color: #8BAF7E; }
+.pace-behind { color: #C97D6E; }
+.pace-ontrack { color: var(--accent); }
+
+.book-setup-form { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.book-setup-form .row2 { display: flex; gap: 8px; }
+.book-setup-preview { background: var(--surface); border-radius: 6px; padding: 8px 10px; }
+.book-pace-label { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); margin-bottom: 2px; }
+.book-setup-preview .book-track { margin-left: 0; }
+.book-setup-preview .book-pace { padding-left: 0; }
+.book-setup-preview-actions { display: flex; gap: 14px; margin-top: 6px; }
+.link-btn { background: none; border: none; padding: 0; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.link-btn.danger { color: #C97D6E; }
+
+.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.heat-cell { aspect-ratio: 1; border-radius: 2px; }
+.heat-head { text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--text-tertiary); }
+
+.linechart { width: 100%; height: auto; display: block; }
+.chart-label { font-family: "IBM Plex Mono", monospace; font-size: 9px; fill: #6E6A5F; }
+
+.stat-row { display: flex; align-items: center; gap: 10px; padding: 7px 4px; }
+.stat-main { flex: 1; }
+.stat-label { font-size: 12.5px; margin-bottom: 4px; }
+.stat-bar-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 3px; }
+.stat-pct { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-secondary); width: 36px; text-align: right; }
+
+.select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13px; width: 100%; }
+.input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13px; width: 100%; }
+
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; align-items: center; }
+.chip { font-family: "IBM Plex Mono", monospace; font-size: 11px; background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.chip.on { color: var(--accent); border-color: var(--accent); }
+.chip-static { font-family: "IBM Plex Mono", monospace; font-size: 10px; background: var(--surface2); color: var(--text-tertiary); border-radius: 999px; padding: 2px 8px; }
+.add-btn { margin-left: auto; }
+
+.btn-primary { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+
+.form-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; font-family: "IBM Plex Mono", monospace; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.weekday-picker { display: flex; gap: 5px; flex-wrap: wrap; }
+.wd-btn { font-family: "IBM Plex Mono", monospace; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 5px; padding: 5px 9px; cursor: pointer; }
+.wd-btn.on { color: var(--accent); border-color: var(--accent); }
+.month-window { display: flex; flex-direction: column; gap: 8px; }
+.always-check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-secondary); }
+.month-selects { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+.month-selects .select { width: auto; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+.manage-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 6px; background: var(--surface); margin-bottom: 4px; }
+.manage-main { flex: 1; min-width: 0; }
+.manage-label { font-size: 13px; margin-bottom: 4px; }
+.manage-meta { display: flex; gap: 5px; flex-wrap: wrap; }
+.icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 5px; color: var(--text-secondary); padding: 5px 9px; cursor: pointer; font-size: 13px; line-height: 1; }
+.icon-btn.danger:hover { color: #C97D6E; border-color: #C97D6E; }
+</style>
+</head>
+<body>
+<div id="app" class="app">
+  <div class="topbar">
+    <nav class="tabs">
+      <button data-tab="today" class="on">Today</button>
+      <button data-tab="workout">Workout</button>
+      <button data-tab="week">Week</button>
+      <button data-tab="month">Month</button>
+      <button data-tab="trends">Trends</button>
+      <button data-tab="manage">Manage</button>
+    </nav>
+    <span id="save-status" class="save-status"></span>
+  </div>
+  <main id="root"><p class="empty">Loading your log…</p></main>
+</div>
+
+<script>
+/* ============================== CONSTANTS ============================== */
+
+const ACCENT = "#74A6A0";
+
+const CATEGORIES = {
+  career: { label: "Career", color: "#7DA0C4" },
+  health: { label: "Health", color: "#8BAF7E" },
+  workout: { label: "Workout", color: "#6FA8A6" },
+  finance: { label: "Finance", color: "#D2AD6E" },
+  relationship: { label: "Relationship", color: "#C98F72" },
+  family: { label: "Family", color: "#B093BE" },
+  inner: { label: "Inner", color: "#9C97B8" },
+  learning: { label: "Learning", color: "#A39C87" },
+};
+
+const QUARTERS = {
+  1: { name: "Reset & Target", color: "#3E7C6A" },
+  2: { name: "Build & Apply", color: "#B5872E" },
+  3: { name: "Land & Elevate", color: "#3B4F68" },
+  4: { name: "Compound", color: "#4C7556" },
+};
+
+const MONTHS = [
+  { n: 1, label: "Jul 2026", full: "July 2026", theme: "Reset (light month)", quarter: 1 },
+  { n: 2, label: "Aug 2026", full: "August 2026", theme: "Foundation", quarter: 1 },
+  { n: 3, label: "Sep 2026", full: "September 2026", theme: "Sharpen", quarter: 1 },
+  { n: 4, label: "Oct 2026", full: "October 2026", theme: "Apply with force", quarter: 2 },
+  { n: 5, label: "Nov 2026", full: "November 2026", theme: "Interview reps", quarter: 2 },
+  { n: 6, label: "Dec 2026", full: "December 2026", theme: "Close the year clean", quarter: 2 },
+  { n: 7, label: "Jan 2027", full: "January 2027", theme: "Convert", quarter: 3 },
+  { n: 8, label: "Feb 2027", full: "February 2027", theme: "Land & onboard / step up", quarter: 3 },
+  { n: 9, label: "Mar 2027", full: "March 2027", theme: "Benchmark", quarter: 3 },
+  { n: 10, label: "Apr 2027", full: "April 2027", theme: "Consolidate", quarter: 4 },
+  { n: 11, label: "May 2027", full: "May 2027", theme: "Deepen", quarter: 4 },
+  { n: 12, label: "Jun 2027", full: "June 2027", theme: "The reckoning", quarter: 4 },
+];
+
+const WEEKDAYS = [
+  { i: 1, l: "Mon" }, { i: 2, l: "Tue" }, { i: 3, l: "Wed" }, { i: 4, l: "Thu" },
+  { i: 5, l: "Fri" }, { i: 6, l: "Sat" }, { i: 0, l: "Sun" },
+];
+
+const MVE_IDS = ["d-morning", "d-reading", "d-lightsout"];
+
+// Logical daily-routine order for Today's DAILY ENGINE list (Sleep/Water/Workout
+// are pulled out as their own anchor rows elsewhere in renderToday, so this only
+// covers the rest). Anything not listed here keeps its existing relative order,
+// appended at the end — new daily tasks won't silently vanish, they just won't
+// be specially placed until added here.
+const TODAY_ROUTINE_ORDER = [
+  "d-morning", "kr-balance",
+  "fam-papa-mon", "fam-papa-tue", "fam-papa-wed", "fam-papa-thu", "fam-papa-fri", "fam-papa-sat", "fam-papa-sun",
+  "d-reading", "d-lightsout",
+];
+function sortByRoutineOrder_(tasks) {
+  const rank = (id) => { const i = TODAY_ROUTINE_ORDER.indexOf(id); return i === -1 ? TODAY_ROUTINE_ORDER.length + 1 : i; };
+  return tasks.map((t, i) => ({ t, i })).sort((a, b) => (rank(a.t.id) - rank(b.t.id)) || (a.i - b.i)).map((x) => x.t);
+}
+const ROADMAP_START = new Date(2026, 6, 1);
+const RECURRENCE_OPTIONS = ["daily", "weekly", "monthly", "quarterly"];
+const EMPTY_FORM = { label: "", notes: "", category: "career", recurrence: "daily", inputType: "check", unit: "", target: 1, aggregate: "sum", activeDays: null, startMonth: "", endMonth: "", useDates: false, startDateVal: "", endDateVal: "", stepSize: "", bookMode: "percent", bookStart: "", bookEnd: "" };
+
+/* ============================== STATE ============================== */
+
+const APP = {
+  config: [], log: {}, tab: "today", selected: new Date(), mveMode: false, ready: false,
+  manageFilter: "all", trendsMetricId: "", trendsShowAvg: false,
+  editingBookRangeFor: null, bookRangeForm: { start: "", end: "" },
+  form: { open: false, editingId: null, data: Object.assign({}, EMPTY_FORM) },
+};
+
+/* ============================== DATE HELPERS ============================== */
+
+function dKey(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function parseKey(k) { return new Date(k + "T00:00:00"); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function startOfDay(d) { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; }
+function roadmapMonthOf(d) { const m = (d.getFullYear() - 2026) * 12 + (d.getMonth() - 6) + 1; return Math.min(12, Math.max(1, m)); }
+function startOfWeek(d) { const r = new Date(d); const day = r.getDay(); const diff = day === 0 ? -6 : 1 - day; r.setDate(r.getDate() + diff); r.setHours(0, 0, 0, 0); return r; }
+function weekDateKeys(d) { const s = startOfWeek(d); return Array.from({ length: 7 }, (_, i) => dKey(addDays(s, i))); }
+function monthDateKeys(d) { const y = d.getFullYear(), m = d.getMonth(); const days = new Date(y, m + 1, 0).getDate(); return Array.from({ length: days }, (_, i) => dKey(new Date(y, m, i + 1))); }
+function quarterDateKeys(d) { const m = d.getMonth(); const qStart = m - (m % 3); let keys = []; for (let mm = qStart; mm <= qStart + 2; mm++) keys = keys.concat(monthDateKeys(new Date(d.getFullYear(), mm, 1))); return keys; }
+function isTaskActiveForMonth(t, rm) { return (t.startMonth == null || rm >= t.startMonth) && (t.endMonth == null || rm <= t.endMonth); }
+function isTaskActiveOnDate(t, date, rm) {
+  if (t.startDate || t.endDate) {
+    const k = dKey(date);
+    if (t.startDate && k < t.startDate) return false;
+    if (t.endDate && k > t.endDate) return false;
+    return true;
+  }
+  return isTaskActiveForMonth(t, rm);
+}
+function isDayActive(t, date) { return !t.activeDays || t.activeDays.includes(date.getDay()); }
+function getTasksFor(config, recurrence, date, rm) { return config.filter((t) => t.recurrence === recurrence && isTaskActiveOnDate(t, date, rm) && (recurrence !== "daily" || isDayActive(t, date))); }
+function monthlyKeysForRm(rm) {
+  const canonical = new Date(2026, 6 + (rm - 1), 1);
+  let keys = monthDateKeys(canonical);
+  // Month 1 can be used a few days before its official 1 Jul start (pre-launch); fold June
+  // in too so anything logged then still counts toward "Month 1" once July actually arrives.
+  if (rm === 1) keys = monthDateKeys(new Date(2026, 5, 1)).concat(keys);
+  return keys;
+}
+function quarterlyKeysForRm(rm) {
+  const canonical = new Date(2026, 6 + (rm - 1), 1);
+  let keys = quarterDateKeys(canonical);
+  if (rm <= 3) keys = monthDateKeys(new Date(2026, 5, 1)).concat(keys);
+  return keys;
+}
+function periodKeysFor(recurrence, date) {
+  if (recurrence === "weekly") return weekDateKeys(date);
+  if (recurrence === "monthly") return monthlyKeysForRm(roadmapMonthOf(date));
+  if (recurrence === "quarterly") return quarterlyKeysForRm(roadmapMonthOf(date));
+  return [dKey(date)];
+}
+function periodDoneCount(t, keys, log) { return keys.filter((k) => log[k] && log[k][t.id]).length; }
+function periodSum(t, keys, log) { return keys.reduce((a, k) => a + (log[k] && log[k][t.id] != null ? Number(log[k][t.id]) : 0), 0); }
+function periodLatest(t, keys, log) { for (let i = keys.length - 1; i >= 0; i--) { const v = log[keys[i]] && log[keys[i]][t.id]; if (v !== undefined && v !== null && v !== "") return v; } return undefined; }
+function periodComplete(t, keys, log) {
+  const target = t.target || 1;
+  if (t.inputType === "check") return periodDoneCount(t, keys, log) >= target;
+  if (t.aggregate === "latest") return periodLatest(t, keys, log) !== undefined;
+  const sum = periodSum(t, keys, log);
+  return t.target ? sum >= t.target : sum > 0;
+}
+function uid() { return "t-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+// For "snapshot" metrics (aggregate: "latest") — finds the most recently logged value
+// so it can be shown as a greyed-out placeholder. Never written to APP.log or the
+// server on its own; it's a visual hint only, so an empty/untouched field can never
+// silently save a phantom reading.
+function findLastKnownValue(taskId, excludeKey) {
+  const todayKey = dKey(startOfDay(new Date()));
+  const keys = Object.keys(APP.log)
+    .filter((k) => k <= todayKey && k !== excludeKey && APP.log[k] && APP.log[k][taskId] !== undefined && APP.log[k][taskId] !== null && APP.log[k][taskId] !== "")
+    .sort();
+  return keys.length ? APP.log[keys[keys.length - 1]][taskId] : undefined;
+}
+
+/* ============================== BOOK PACE TRACKING ============================== */
+// A book task has startDate/endDate (started reading -> target finish) and
+// bookStart/bookEnd (the position values at those dates, e.g. 3 -> 97 for a
+// Kindle % that excludes front/back matter, or page 1 -> page 320). The logged
+// value each day is the current position, not a delta — same "snapshot"
+// semantics as aggregate:"latest" number tasks, just date-window-driven instead
+// of period-driven.
+
+function daysBetween(keyA, keyB) {
+  return Math.round((parseKey(keyB) - parseKey(keyA)) / 86400000);
+}
+
+function expectedBookPosition(task, dateKey) {
+  if (!task.startDate || !task.endDate) return undefined;
+  const start = task.bookStart != null ? task.bookStart : 0;
+  const end = task.bookEnd != null ? task.bookEnd : 100;
+  const totalDays = daysBetween(task.startDate, task.endDate) + 1; // inclusive day count (Jul 1..Jul 31 = 31 days)
+  if (totalDays <= 0) return end;
+  let elapsed = daysBetween(task.startDate, dateKey) + 1; // Day 1 = one day of reading done
+  if (elapsed < 1) elapsed = 1;
+  if (elapsed > totalDays) elapsed = totalDays;
+  return start + (elapsed / totalDays) * (end - start);
+}
+
+// Most recent logged position at or before asOfKey — NOT bounded to "today", since a
+// book's current position is whatever you last reported, however many days ago.
+function latestBookValueAsOf(taskId, asOfKey) {
+  const keys = Object.keys(APP.log)
+    .filter((k) => k <= asOfKey && APP.log[k] && APP.log[k][taskId] !== undefined && APP.log[k][taskId] !== null && APP.log[k][taskId] !== "")
+    .sort();
+  return keys.length ? Number(APP.log[keys[keys.length - 1]][taskId]) : undefined;
+}
+
+// Builds the pill/track/caption markup for a book task as of controlKey. Shared by
+// the full editable row (renderTaskRow) and the read-only preview shown inline in
+// the Month tab's range-setup block, so the math and wording never drift apart.
+function bookPaceMarkup(task, controlKey) {
+  const unit = task.unit || (task.bookMode === "pages" ? "pg" : "%");
+  const start = task.bookStart != null ? task.bookStart : 0;
+  const end = task.bookEnd != null ? task.bookEnd : 100;
+  const range = (end - start) || 1;
+  const actualVal = latestBookValueAsOf(task.id, controlKey);
+  const expectedVal = expectedBookPosition(task, controlKey);
+  const actualPct = actualVal != null ? Math.max(0, Math.min(100, ((actualVal - start) / range) * 100)) : 0;
+  const expectedPct = expectedVal != null ? Math.max(0, Math.min(100, ((expectedVal - start) / range) * 100)) : null;
+
+  let paceHtml = "";
+  if (expectedVal != null) {
+    const totalDays = daysBetween(task.startDate, task.endDate);
+    let elapsed = daysBetween(task.startDate, controlKey);
+    if (elapsed < 0) elapsed = 0;
+    if (elapsed > totalDays) elapsed = totalDays;
+    let diffHtml = "";
+    if (actualVal != null) {
+      const diff = Math.round((actualVal - expectedVal) * 10) / 10;
+      const bookRange = Math.abs((task.bookEnd != null ? task.bookEnd : 100) - (task.bookStart != null ? task.bookStart : 0));
+      const tol = Math.max(0.5, bookRange * 0.02); // within ~2% of the book counts as on pace
+      if (Math.abs(diff) <= tol) diffHtml = '<span class="pace-ontrack">on pace</span>';
+      else if (diff > 0) diffHtml = '<span class="pace-ahead">+' + diff + unit + " ahead</span>";
+      else diffHtml = '<span class="pace-behind">' + diff + unit + " behind</span>";
+    }
+    paceHtml = '<div class="book-pace">Day ' + (elapsed + 1) + " of " + (totalDays + 1) + " \u00b7 target ~" + (Math.round(expectedVal * 10) / 10) + unit + (diffHtml ? " \u00b7 " + diffHtml : "") + "</div>";
+  }
+
+  const trackHtml = '<div class="book-track"><div class="book-track-fill" style="width:' + actualPct.toFixed(1) + '%"></div>' +
+    (expectedPct != null ? '<div class="book-track-target" style="left:' + expectedPct.toFixed(1) + '%"></div>' : "") +
+    "</div>";
+
+  const pillHtml = '<span class="pill">' + (actualVal != null ? esc(actualVal) + unit : "—") + "</span>";
+
+  return { pillHtml, trackHtml, paceHtml, actualVal, unit };
+}
+
+// True for any task whose id ends in "-book" (the monthly m1-book..m12-book
+// pattern, and the Blueprint's fortnight-book tasks like bp-fn1-book).
+function isBookCheckTask(t) {
+  return /-book$/.test(t.id);
+}
+function bookProgressIdFor(parentId) {
+  return parentId + "-progress";
+}
+function findBookProgressTask(parentId) {
+  return APP.config.find((t) => t.id === bookProgressIdFor(parentId));
+}
+// First/last calendar day of the given roadmap month — used as the default reading
+// window when a book's % range is set from the Month tab (matches the "book for
+// July" mental model: the range spans that whole calendar month).
+function roadmapMonthCalendarRange(rm) {
+  const start = new Date(2026, 6 + (rm - 1), 1);
+  const end = new Date(2026, 6 + (rm - 1) + 1, 0);
+  return { start: dKey(start), end: dKey(end) };
+}
+// Dated (startDate/endDate) daily-recurrence career/learning tasks whose window
+// STARTS within the given roadmap month's calendar range — this is how the
+// Blueprint's fortnight books/practices/courses/checkpoints (which are date-ranged,
+// not startMonth/endMonth-scoped) surface on the Month tab. Attribution is by
+// start date only (not "any day overlaps"), so a task that starts near a month
+// boundary doesn't visually double up across two months' cards — it still runs
+// its full date range functionally on Today/Week regardless of this attribution.
+function blueprintTasksForMonth(rm) {
+  const { start, end } = roadmapMonthCalendarRange(rm);
+  return APP.config.filter((t) =>
+    t.recurrence === "daily" &&
+    (t.category === "career" || t.category === "learning") &&
+    t.startDate && t.endDate &&
+    t.startDate >= start && t.startDate <= end
+  );
+}
+
+/* ============================== LIFETIME STATS ============================== */
+
+function computeLifetimeStats(task, log, today) {
+  let startDate, cap;
+  if (task.startDate || task.endDate) {
+    startDate = task.startDate ? parseKey(task.startDate) : new Date(ROADMAP_START);
+    if (startDate > today) return null;
+    const endDate = task.endDate ? parseKey(task.endDate) : today;
+    cap = endDate < today ? endDate : today;
+  } else {
+    const rmStart = task.startMonth || 1;
+    const rmEnd = task.endMonth || 12;
+    startDate = new Date(2026, 6 + (rmStart - 1), 1);
+    if (startDate < ROADMAP_START) startDate = new Date(ROADMAP_START);
+    if (startDate > today) return null;
+    const windowEnd = new Date(2026, 6 + (rmEnd - 1) + 1, 0);
+    cap = windowEnd < today ? windowEnd : today;
+  }
+  let total = 0, done = 0, cursor;
+
+  if (task.recurrence === "daily") {
+    cursor = new Date(startDate);
+    while (cursor <= cap) {
+      if (isDayActive(task, cursor)) { total++; if (log[dKey(cursor)] && log[dKey(cursor)][task.id]) done++; }
+      cursor = addDays(cursor, 1);
+    }
+  } else if (task.recurrence === "weekly") {
+    cursor = startOfWeek(startDate);
+    while (cursor <= cap) { total++; if (periodComplete(task, weekDateKeys(cursor), log)) done++; cursor = addDays(cursor, 7); }
+  } else if (task.recurrence === "monthly") {
+    cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (cursor <= cap) { total++; if (periodComplete(task, monthDateKeys(cursor), log)) done++; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1); }
+  } else if (task.recurrence === "quarterly") {
+    const sm = startDate.getMonth();
+    cursor = new Date(startDate.getFullYear(), sm - (sm % 3), 1);
+    while (cursor <= cap) { total++; if (periodComplete(task, quarterDateKeys(cursor), log)) done++; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 3, 1); }
+  }
+  return total > 0 ? { done: done, total: total, rate: done / total } : null;
+}
+
+/* ============================== RENDER: TODAY ============================== */
+
+function renderTaskRow(task, recurrence, pillKey, controlKey, readOnly) {
+  const keys = periodKeysFor(recurrence, parseKey(pillKey));
+  const isDailyLike = recurrence === "daily";
+  let pillHtml = "";
+  if (!isDailyLike) {
+    if (task.inputType === "check") {
+      const done = periodDoneCount(task, keys, APP.log);
+      const target = task.target || 1;
+      pillHtml = '<span class="pill ' + (done >= target ? "pill-on" : "") + '">' + Math.min(done, target) + "/" + target + "</span>";
+    } else if (task.aggregate === "latest") {
+      const v = periodLatest(task, keys, APP.log);
+      pillHtml = '<span class="pill">' + (v !== undefined ? esc(v) + (task.unit ? " " + esc(task.unit) : "") : "—") + "</span>";
+    } else {
+      const sum = periodSum(task, keys, APP.log);
+      pillHtml = '<span class="pill">Σ ' + sum + (task.unit ? " " + esc(task.unit) : "") + "</span>";
+    }
+  }
+  const dot = '<span class="dot" style="background:' + CATEGORIES[task.category].color + '"></span>';
+  const notesHtml = task.notes ? '<div class="task-notes">' + esc(task.notes) + "</div>" : "";
+
+  // Book tasks get a pace readout (where you should be today vs where you last
+  // reported) and a thin progress track with a marker showing the target position.
+  if (task.inputType === "book") {
+    const pace = bookPaceMarkup(task, controlKey);
+    const unit = pace.unit;
+    const actualVal = pace.actualVal;
+
+    let controlHtml2 = "";
+    if (!readOnly) {
+      const todayLogVal = (APP.log[controlKey] || {})[task.id];
+      const valAttr = todayLogVal === undefined || todayLogVal === null ? "" : esc(String(todayLogVal));
+      const placeholderVal = actualVal != null ? String(actualVal) : "—";
+      const stepVal = task.step != null ? task.step : 1;
+      const minus = '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="-' + stepVal + '" aria-label="Decrease">\u2212</button>';
+      const plus = '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="' + stepVal + '" aria-label="Increase">+</button>';
+      controlHtml2 = '<div class="num-wrap">' + minus + '<input type="number" inputmode="decimal" class="num" placeholder="' + esc(placeholderVal) + '" data-action="number" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" value="' + valAttr + '">' + plus + '<span class="unit">' + esc(unit) + "</span></div>";
+    }
+    const pillHtml2 = '<span class="pill">' + (actualVal != null ? esc(actualVal) + unit : "—") + "</span>";
+
+    return (
+      '<div class="task-row book-task' + (readOnly ? " readonly" : "") + '">' +
+        '<div class="task-row-top">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pace.pillHtml + (readOnly ? "" : '<div class="task-control">' + controlHtml2 + "</div>") + "</div>" +
+        pace.trackHtml +
+        pace.paceHtml +
+      "</div>"
+    );
+  }
+
+  // Scale tasks (0-10 buttons) get a two-line layout: label+pill on top, the button row below.
+  if (task.inputType === "scale") {
+    const dayLog = APP.log[controlKey] || {};
+    const curVal = dayLog[task.id];
+    let scaleRow = "";
+    if (!readOnly) {
+      let btns = "";
+      for (let i = 0; i <= 10; i++) {
+        btns += '<button type="button" class="scale-btn ' + (curVal === i ? "on" : "") + '" data-action="scale" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-value="' + i + '">' + i + "</button>";
+      }
+      scaleRow = '<div class="scale-row">' + btns + "</div>";
+    }
+    return (
+      '<div class="task-row scale-task' + (readOnly ? " readonly" : "") + '">' +
+        '<div class="task-row-top">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pillHtml + "</div>" +
+        scaleRow +
+      "</div>"
+    );
+  }
+
+  let controlHtml = "";
+  if (readOnly) {
+    controlHtml = "";
+  } else {
+    const dayLog = APP.log[controlKey] || {};
+    const todayVal = dayLog[task.id];
+    if (task.inputType === "check") {
+      // Non-daily tasks with a target of exactly 1 are "did this happen this period at all" —
+      // the box should reflect whether the PERIOD is satisfied, not whether today specifically
+      // has an entry (otherwise it looks unchecked again on every new day you revisit it).
+      if (!isDailyLike && (task.target || 1) === 1) {
+        const periodChecked = periodDoneCount(task, keys, APP.log) >= 1;
+        controlHtml = '<input type="checkbox" class="chk" data-action="toggle-period" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-recurrence="' + recurrence + '" data-pillkey="' + pillKey + '" ' + (periodChecked ? "checked" : "") + ">";
+      } else {
+        controlHtml = '<input type="checkbox" class="chk" data-action="toggle" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" ' + (todayVal ? "checked" : "") + ">";
+      }
+    } else {
+      const valAttr = todayVal === undefined || todayVal === null ? "" : esc(String(todayVal));
+      let placeholder = "—";
+      if ((todayVal === undefined || todayVal === null) && task.aggregate === "latest") {
+        const last = findLastKnownValue(task.id, controlKey);
+        if (last !== undefined) placeholder = String(last);
+      }
+      const minus = task.step ? '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="-' + task.step + '" aria-label="Decrease">\u2212</button>' : "";
+      const plus = task.step ? '<button type="button" class="step-btn" data-action="step" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" data-delta="' + task.step + '" aria-label="Increase">+</button>' : "";
+      controlHtml = '<div class="num-wrap">' + minus + '<input type="number" inputmode="decimal" class="num" placeholder="' + esc(placeholder) + '" data-action="number" data-task="' + esc(task.id) + '" data-date="' + controlKey + '" value="' + valAttr + '">' + plus + (task.unit ? '<span class="unit">' + esc(task.unit) + "</span>" : "") + "</div>";
+    }
+  }
+  return '<div class="task-row' + (readOnly ? " readonly" : "") + '">' + dot + '<div class="task-main"><div class="task-label">' + esc(task.label) + "</div>" + notesHtml + "</div>" + pillHtml + '<div class="task-control">' + controlHtml + "</div></div>";
+}
+
+function renderSection(title, tasks, recurrence, pillKey, controlKey, readOnly, emptyText) {
+  const checks = tasks.filter((t) => t.inputType === "check");
+  const keys = periodKeysFor(recurrence, parseKey(pillKey));
+  const doneCount = checks.filter((t) => periodComplete(t, keys, APP.log)).length;
+  const countHtml = checks.length > 0 ? '<span class="section-count">' + doneCount + "/" + checks.length + "</span>" : "";
+  const body = tasks.length === 0 ? '<p class="empty">' + esc(emptyText) + "</p>" : '<div class="rows">' + tasks.map((t) => renderTaskRow(t, recurrence, pillKey, controlKey, readOnly)).join("") + "</div>";
+  return '<section class="section"><div class="section-head"><span class="section-title">' + esc(title) + "</span>" + countHtml + "</div>" + body + (readOnly ? '<p class="hint">Past/future periods are view-only — switch back to the current one to log entries.</p>' : "") + "</section>";
+}
+
+const WORKOUT_DAY_NAMES = {
+  0: "Core + Hip Flexors + Calves/Feet",
+  1: "Glutes",
+  2: "Back + Shoulders",
+  3: "Hamstrings",
+  4: "Chest + Triceps",
+  5: "Quads",
+  6: "Biceps + Neck",
+};
+
+function renderWorkout() {
+  const today = startOfDay(new Date());
+  const sel = startOfDay(APP.selected);
+  const isToday = sel.getTime() === today.getTime();
+  const selectedKey = dKey(sel);
+  const rm = roadmapMonthOf(sel);
+  const dayOfWeek = sel.getDay();
+  const groupName = WORKOUT_DAY_NAMES[dayOfWeek];
+
+  const exercises = getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category === "workout");
+  const sectionsHtml = renderSection("TODAY'S GROUP \u2014 " + groupName.toUpperCase(), exercises, "daily", selectedKey, selectedKey, false, "No workout scheduled \u2014 rest day.");
+
+  return (
+    '<header class="hdr">' +
+      '<div class="hdr-top"><span class="eyebrow">WORKOUT</span></div>' +
+      '<div class="day-nav"><button data-action="prev-day" aria-label="Previous day">\u2039</button>' +
+      '<div class="day-label"><span class="day-name">' + sel.toLocaleDateString("en-IN", { weekday: "long" }) + "</span>" +
+      '<span class="day-date">' + sel.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + "</span></div>" +
+      '<button data-action="next-day" aria-label="Next day" ' + (isToday ? "disabled" : "") + ">\u203a</button>" +
+      (!isToday ? '<button class="jump-today" data-action="jump-today">Today</button>' : "") +
+      "</div>" +
+      '<p class="month-theme">Log sets completed per exercise \u2014 target shown in the notes.</p>' +
+    "</header>" +
+    sectionsHtml
+  );
+}
+
+function renderToday() {
+  const today = startOfDay(new Date());
+  const sel = startOfDay(APP.selected);
+  const isToday = sel.getTime() === today.getTime();
+  const rm = roadmapMonthOf(sel);
+  const selectedKey = dKey(sel);
+  const monthMeta = MONTHS[rm - 1];
+  const quarterMeta = QUARTERS[monthMeta.quarter];
+
+  const allKeys = Object.keys(APP.log).filter((k) => APP.log[k] && Object.keys(APP.log[k]).length > 0);
+  const lastActiveKey = allKeys.length ? allKeys.sort().pop() : null;
+  const daysSinceLast = lastActiveKey ? Math.floor((today - startOfDay(parseKey(lastActiveKey))) / 86400000) : null;
+  const suggestMVE = daysSinceLast !== null && daysSinceLast >= 7;
+
+  const dailyTasksAll = APP.mveMode ? APP.config.filter((t) => MVE_IDS.includes(t.id)) : getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category !== "workout" && t.inputType !== "book");
+  const sleepTask = dailyTasksAll.find((t) => t.id === "d-sleephours");
+  const waterTask = dailyTasksAll.find((t) => t.id === "d-water");
+  const dailyTasks = sortByRoutineOrder_(dailyTasksAll.filter((t) => t.id !== "d-sleephours" && t.id !== "d-water"));
+
+  const bannerHtml = suggestMVE && !APP.mveMode
+    ? '<div class="banner"><p>It\u2019s been ' + daysSinceLast + ' days since the last log. No story needed \u2014 just the Minimum Viable Engine: morning walk, McGill Big 3, reading, sleep. Add the rest back once that feels steady.</p><button data-action="enter-mve">Switch to MVE</button></div>'
+    : "";
+
+  const sleepHtml = sleepTask ? '<section class="section"><div class="rows">' + renderTaskRow(sleepTask, "daily", selectedKey, selectedKey, false) + "</div></section>" : "";
+  const waterHtml = waterTask ? '<section class="section"><div class="rows">' + renderTaskRow(waterTask, "daily", selectedKey, selectedKey, false) + "</div></section>" : "";
+  const workoutSummaryHtml = APP.mveMode ? "" : renderWorkoutSummaryToday(sel, rm, selectedKey);
+  const sectionsHtml = renderSection("DAILY ENGINE", dailyTasks, "daily", selectedKey, selectedKey, false, "Nothing scheduled today.");
+
+  return (
+    '<header class="hdr">' +
+      '<div class="hdr-top"><span class="eyebrow">TODAY</span>' +
+      '<button class="mve-toggle ' + (APP.mveMode ? "active" : "") + '" data-action="toggle-mve">' + (APP.mveMode ? "Exit MVE" : "MVE mode") + "</button></div>" +
+      '<div class="day-nav"><button data-action="prev-day" aria-label="Previous day">\u2039</button>' +
+      '<div class="day-label"><span class="day-name">' + sel.toLocaleDateString("en-IN", { weekday: "long" }) + "</span>" +
+      '<span class="day-date">' + sel.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + "</span></div>" +
+      '<button data-action="next-day" aria-label="Next day" ' + (isToday ? "disabled" : "") + ">\u203a</button>" +
+      (!isToday ? '<button class="jump-today" data-action="jump-today">Today</button>' : "") +
+      "</div>" +
+      '<p class="month-theme">' + esc(monthMeta.full) + " \u00b7 Q" + monthMeta.quarter + " " + esc(quarterMeta.name) + "</p>" +
+    "</header>" +
+    bannerHtml +
+    sleepHtml +
+    workoutSummaryHtml +
+    waterHtml +
+    sectionsHtml +
+    renderActiveBooksSection(false)
+  );
+}
+
+function renderWorkoutSummaryToday(sel, rm, selectedKey) {
+  const tasks = getTasksFor(APP.config, "daily", sel, rm).filter((t) => t.category === "workout");
+  if (!tasks.length) return "";
+  const groupName = WORKOUT_DAY_NAMES[sel.getDay()];
+  const dayLog = APP.log[selectedKey] || {};
+  const doneCount = tasks.filter((t) => {
+    const v = dayLog[t.id];
+    if (t.inputType === "check") return !!v;
+    return v !== undefined && v !== null && Number(v) >= (t.target || 1);
+  }).length;
+  const allDone = doneCount === tasks.length;
+  return (
+    '<section class="section">' +
+      '<div class="task-row" data-tab="workout" style="cursor:pointer;">' +
+        '<span class="dot" style="background:' + CATEGORIES.workout.color + '"></span>' +
+        '<div class="task-main"><div class="task-label">Workout \u2014 ' + esc(groupName) + "</div>" +
+        '<div class="task-notes">Tap to open the Workout tab for sets & cues.</div></div>' +
+        '<span class="pill ' + (allDone ? "pill-on" : "") + '">' + doneCount + "/" + tasks.length + "</span>" +
+      "</div>" +
+    "</section>"
+  );
+}
+
+function renderActiveBooksSection(readOnly) {
+  const today = startOfDay(new Date());
+  const rm = roadmapMonthOf(today);
+  const todayKey = dKey(today);
+  const books = APP.config.filter((t) => t.inputType === "book" && isTaskActiveOnDate(t, today, rm));
+  if (!books.length) return "";
+  const rows = books.map((t) => renderTaskRow(t, "daily", todayKey, todayKey, readOnly)).join("");
+  const hint = readOnly
+    ? "Logged from the Today tab \u2014 shown here so you can see pace at a glance."
+    : "Enter today\u2019s actual progress below \u2014 this always targets today, whichever week you\u2019re browsing.";
+  return (
+    '<section class="section"><div class="section-head"><span class="section-title">READING PROGRESS</span></div>' +
+    '<div class="rows">' + rows + "</div>" +
+    '<p class="hint">' + hint + "</p></section>"
+  );
+}
+
+// Month tab: for each of this month's "Read: <title>" checkbox tasks, show the
+// completion checkbox (handled by the normal THIS MONTH section above) plus a
+// dedicated block here for configuring that book's % (or page) range — separate
+// from the checkbox, per request. Three states: not yet configured (a single
+// "set range" button), currently being edited (inline form), or configured
+// (a small read-only pace preview with edit/stop links).
+function renderMonthBookSetup(bookTasks) {
+  if (!bookTasks.length) return "";
+  const today = startOfDay(new Date());
+  const todayKey = dKey(today);
+
+  return bookTasks.map((parent) => {
+    const title = parent.label.replace(/^Read:\s*/i, "");
+    const companion = findBookProgressTask(parent.id);
+    const editing = APP.editingBookRangeFor === parent.id;
+    let body;
+
+    if (editing) {
+      const f = APP.bookRangeForm;
+      body = (
+        '<div class="book-setup-form">' +
+          '<div class="row2"><div class="form-row" style="flex:1;margin-bottom:0;"><label>Start page</label><input class="input" type="number" data-bookrange-field="start" value="' + esc(f.start) + '" placeholder="1"></div>' +
+          '<div class="form-row" style="flex:1;margin-bottom:0;"><label>End page</label><input class="input" type="number" data-bookrange-field="end" value="' + esc(f.end) + '" placeholder="320"></div></div>' +
+          '<p class="hint">Enter the page you start on and the last page you\u2019ll read. The daily target ramps evenly across this month.</p>' +
+          '<div class="form-actions"><button class="btn-secondary" data-action="cancel-book-range">Cancel</button><button class="btn-primary" data-action="save-book-range" data-parent="' + esc(parent.id) + '">Save range</button></div>' +
+        "</div>"
+      );
+    } else if (companion) {
+      const pace = bookPaceMarkup(companion, todayKey);
+      body = (
+        '<div class="book-setup-preview">' +
+          '<div class="book-pace-label">p.' + esc(companion.bookStart) + " \u2192 p." + esc(companion.bookEnd) + " \u00b7 " + esc(companion.startDate) + " to " + esc(companion.endDate) + "</div>" +
+          pace.trackHtml + pace.paceHtml +
+          '<div class="book-setup-preview-actions"><button class="link-btn" data-action="open-book-range" data-parent="' + esc(parent.id) + '">Edit range</button><button class="link-btn danger" data-action="stop-book-tracking" data-parent="' + esc(parent.id) + '">Stop tracking</button></div>' +
+        "</div>"
+      );
+    } else {
+      body = '<div class="book-setup"><button class="btn-secondary" data-action="open-book-range" data-parent="' + esc(parent.id) + '">Set this book\u2019s page range</button></div>';
+    }
+
+    return '<section class="section"><div class="section-head"><span class="section-title">' + esc(title.toUpperCase()) + " \u2014 PAGES</span></div>" + body + "</section>";
+  }).join("");
+}
+
+function renderWeek() {
+  const today = startOfDay(new Date());
+  const sel = startOfDay(APP.selected);
+  const weekStart = startOfWeek(sel);
+  const weekEnd = addDays(weekStart, 6);
+  const isCurrentWeek = weekStart.getTime() === startOfWeek(today).getTime();
+  const rm = roadmapMonthOf(sel);
+  const pillKey = dKey(weekStart);
+  const controlKey = dKey(today);
+
+  const weeklyTasks = getTasksFor(APP.config, "weekly", sel, rm);
+  const sectionsHtml = renderSection("THIS WEEK", weeklyTasks, "weekly", pillKey, controlKey, !isCurrentWeek, "No weekly items active.") + renderActiveBooksSection(false);
+
+  return (
+    '<header class="hdr">' +
+      '<div class="hdr-top"><span class="eyebrow">WEEK</span></div>' +
+      '<div class="day-nav"><button data-action="prev-week" aria-label="Previous week">\u2039</button>' +
+      '<div class="day-label"><span class="day-name">' + weekStart.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + " \u2013 " + weekEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + "</span>" +
+      '<span class="day-date">' + (isCurrentWeek ? "This week" : weekStart.toLocaleDateString("en-IN", { year: "numeric" })) + "</span></div>" +
+      '<button data-action="next-week" aria-label="Next week">\u203a</button>' +
+      (!isCurrentWeek ? '<button class="jump-today" data-action="jump-week">This week</button>' : "") +
+      "</div>" +
+    "</header>" +
+    sectionsHtml
+  );
+}
+
+function renderMonth() {
+  const today = startOfDay(new Date());
+  const sel = startOfDay(APP.selected);
+  const rm = roadmapMonthOf(sel);
+  const todayRm = roadmapMonthOf(today);
+  const isCurrentMonth = rm === todayRm;
+  const monthMeta = MONTHS[rm - 1];
+  const quarterMeta = QUARTERS[monthMeta.quarter];
+  const pillKey = dKey(new Date(sel.getFullYear(), sel.getMonth(), 1));
+  const controlKey = dKey(today);
+
+  const monthlyTasks = getTasksFor(APP.config, "monthly", sel, rm);
+  const quarterlyTasks = rm % 3 === 0 ? getTasksFor(APP.config, "quarterly", sel, rm) : [];
+  const blueprintTasks = blueprintTasksForMonth(rm);
+  const blueprintNonBook = blueprintTasks.filter((t) => !isBookCheckTask(t) && t.inputType !== "book");
+  const allBookTasks = monthlyTasks.filter(isBookCheckTask).concat(blueprintTasks.filter(isBookCheckTask));
+  const todayKey = dKey(today);
+
+  const odometer = MONTHS.map((m) => {
+    const op = m.n < rm ? 0.85 : m.n === rm ? 1 : 0.22;
+    const outline = m.n === rm ? "outline:1.5px solid " + ACCENT + ";" : "";
+    return '<div class="odo-seg" title="' + esc(m.full + " — " + m.theme) + '" style="background:' + QUARTERS[m.quarter].color + ";opacity:" + op + ";" + outline + '"></div>';
+  }).join("");
+
+  let sectionsHtml = renderSection("THIS MONTH", monthlyTasks, "monthly", pillKey, controlKey, !isCurrentMonth, "No monthly items active.");
+  if (rm % 3 === 0) sectionsHtml += renderSection("THIS QUARTER", quarterlyTasks, "quarterly", pillKey, controlKey, !isCurrentMonth, "No quarterly items active.");
+  if (blueprintNonBook.length) sectionsHtml += renderSection("CAREER — ALLIANCES BLUEPRINT", blueprintNonBook, "daily", todayKey, todayKey, !isCurrentMonth, "");
+  sectionsHtml += renderMonthBookSetup(allBookTasks);
+
+  return (
+    '<header class="hdr">' +
+      '<div class="hdr-top"><span class="eyebrow">THE 12-MONTH ENGINE</span>' +
+      '<button class="mve-toggle" data-action="add-book-shortcut">+ Track a book</button></div>' +
+      '<div class="hdr-main"><h1>' + esc(monthMeta.full) + "</h1>" +
+      '<span class="quarter-badge" style="color:' + quarterMeta.color + ";border-color:" + quarterMeta.color + '">Q' + monthMeta.quarter + " \u00b7 " + esc(quarterMeta.name) + "</span></div>" +
+      '<p class="month-theme">' + esc(monthMeta.theme) + "</p>" +
+      '<div class="odometer">' + odometer + "</div>" +
+      '<div class="day-nav"><button data-action="prev-month" aria-label="Previous month" ' + (rm <= 1 ? "disabled" : "") + ">\u2039</button>" +
+      '<div class="day-label"><span class="day-name">Month ' + rm + " of 12</span>" +
+      '<span class="day-date">' + (isCurrentMonth ? "Current month" : "") + "</span></div>" +
+      '<button data-action="next-month" aria-label="Next month" ' + (rm >= 12 ? "disabled" : "") + ">\u203a</button>" +
+      (!isCurrentMonth ? '<button class="jump-today" data-action="jump-month">This month</button>' : "") +
+      "</div>" +
+    "</header>" +
+    sectionsHtml
+  );
+}
+
+/* ============================== RENDER: TRENDS ============================== */
+
+function renderHeatmap() {
+  const today = startOfDay(new Date());
+  const rawStart = addDays(today, -69);
+  const gridStart = startOfWeek(rawStart); // back up to Monday so columns line up under Mon..Sun
+  const totalCells = Math.floor((today - gridStart) / 86400000) + 1;
+  const days = Array.from({ length: totalCells }, (_, i) => addDays(gridStart, i));
+  const cells = days.map((d) => {
+    const rm = roadmapMonthOf(d);
+    const dailyChecks = APP.config.filter((t) => t.recurrence === "daily" && t.inputType === "check" && isTaskActiveOnDate(t, d, rm) && isDayActive(t, d));
+    const k = dKey(d);
+    let style, titleText;
+    if (dailyChecks.length > 0) {
+      const done = dailyChecks.filter((t) => APP.log[k] && APP.log[k][t.id]).length;
+      const ratio = done / dailyChecks.length;
+      style = "background:rgba(201,164,100," + (0.12 + ratio * 0.78).toFixed(2) + ");border:1px solid transparent;";
+      titleText = d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) + " \u2014 " + Math.round(ratio * 100) + "%";
+    } else {
+      style = "background:transparent;border:1px solid var(--border);";
+      titleText = d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+    }
+    return '<div class="heat-cell" title="' + esc(titleText) + '" style="' + style + '"></div>';
+  }).join("");
+  const header = ["M", "T", "W", "T", "F", "S", "S"].map((l) => '<div class="heat-head">' + l + "</div>").join("");
+  return '<div class="heatmap">' + header + cells + "</div>";
+}
+
+function renderLineChart(history, unit) {
+  if (history.length < 2) return '<p class="empty">Not enough logged points yet for this metric.</p>';
+  const w = 320, h = 170, pad = 30;
+  const values = history.map((p) => p.value);
+  const min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+  const range = max - min || 1;
+  const pts = history.map((p, i) => {
+    const x = pad + (history.length === 1 ? 0 : (i / (history.length - 1)) * (w - 2 * pad));
+    const y = h - pad - ((p.value - min) / range) * (h - 2 * pad);
+    return [x, y];
+  });
+  const poly = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  const circles = pts.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3" fill="#74A6A0"></circle>').join("");
+  return (
+    '<svg viewBox="0 0 ' + w + " " + h + '" class="linechart">' +
+    '<polyline points="' + poly + '" fill="none" stroke="#74A6A0" stroke-width="2"/>' +
+    circles +
+    '<text x="' + pad + '" y="' + (h - 8) + '" class="chart-label">' + esc(history[0].date) + "</text>" +
+    '<text x="' + (w - pad) + '" y="' + (h - 8) + '" text-anchor="end" class="chart-label">' + esc(history[history.length - 1].date) + "</text>" +
+    '<text x="' + pad + '" y="14" class="chart-label">' + esc(String(max)) + (unit ? " " + esc(unit) : "") + "</text>" +
+    '<text x="' + pad + '" y="' + (h - pad + 14) + '" class="chart-label">' + esc(String(min)) + (unit ? " " + esc(unit) : "") + "</text>" +
+    "</svg>"
+  );
+}
+
+function movingAverage(history, window) {
+  return history.map((p, i) => {
+    const start = Math.max(0, i - window + 1);
+    const slice = history.slice(start, i + 1);
+    const avg = slice.reduce((a, b) => a + b.value, 0) / slice.length;
+    return { date: p.date, value: Math.round(avg * 100) / 100 };
+  });
+}
+
+function renderTrends() {
+  const today = startOfDay(new Date());
+  const numberTasks = APP.config.filter((t) => t.inputType === "number" || t.inputType === "scale" || t.inputType === "book");
+  if (!APP.trendsMetricId && numberTasks[0]) APP.trendsMetricId = numberTasks[0].id;
+  const metricId = APP.trendsMetricId;
+  const metricTask = APP.config.find((t) => t.id === metricId);
+
+  const history = metricId
+    ? Object.keys(APP.log).filter((k) => APP.log[k] && APP.log[k][metricId] != null && APP.log[k][metricId] !== "").sort()
+        .map((k) => ({ date: parseKey(k).toLocaleDateString("en-IN", { day: "numeric", month: "short" }), value: Number(APP.log[k][metricId]) }))
+    : [];
+
+  const canSmooth = metricTask && metricTask.recurrence === "daily";
+  const plotData = canSmooth && APP.trendsShowAvg ? movingAverage(history, 7) : history;
+
+  const stats = APP.config
+    .filter((t) => t.inputType !== "book" && !(t.startMonth && t.startMonth === t.endMonth))
+    .map((t) => ({ task: t, stat: computeLifetimeStats(t, APP.log, today) }))
+    .filter((x) => x.stat)
+    .sort((a, b) => a.task.category.localeCompare(b.task.category) || a.task.label.localeCompare(b.task.label));
+
+  const optionsHtml = numberTasks.map((t) => '<option value="' + esc(t.id) + '" ' + (t.id === metricId ? "selected" : "") + ">" + esc(t.label) + "</option>").join("");
+
+  const statsHtml = stats.length === 0
+    ? '<p class="empty">No recurring tasks have started yet.</p>'
+    : '<div class="rows">' + stats.map(({ task, stat }) =>
+        '<div class="stat-row"><span class="dot" style="background:' + CATEGORIES[task.category].color + '"></span>' +
+        '<div class="stat-main"><div class="stat-label">' + esc(task.label) + "</div>" +
+        '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + Math.round(stat.rate * 100) + "%;background:" + CATEGORIES[task.category].color + '"></div></div></div>' +
+        '<span class="stat-pct">' + Math.round(stat.rate * 100) + "%</span></div>"
+      ).join("") + "</div>";
+
+  const smoothToggle = canSmooth
+    ? '<label class="always-check" style="margin-top:8px;"><input type="checkbox" data-action="toggle-trends-avg" ' + (APP.trendsShowAvg ? "checked" : "") + "> Show 7-day average instead of raw points</label>"
+    : "";
+
+  return (
+    '<section class="section"><div class="section-head"><span class="section-title">LAST 10 WEEKS</span></div>' +
+    renderHeatmap() +
+    '<p class="hint">Each square is one day\u2019s Daily Engine completion. Blank squares had nothing scheduled that day.</p></section>' +
+    '<section class="section"><div class="section-head"><span class="section-title">METRIC OVER TIME</span></div>' +
+    '<select class="select" data-action="metric-select">' + optionsHtml + "</select>" +
+    smoothToggle +
+    '<div style="margin-top:12px;">' + renderLineChart(plotData, metricTask ? metricTask.unit : "") + "</div></section>" +
+    '<section class="section"><div class="section-head"><span class="section-title">COMPLETION RATE \u2014 LIFETIME</span></div>' + statsHtml + "</section>"
+  );
+}
+
+/* ============================== RENDER: MANAGE ============================== */
+
+function windowLabel(t) {
+  if (t.startDate || t.endDate) {
+    const fmt = (k) => parseKey(k).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    const s = t.startDate ? fmt(t.startDate) : "\u2026";
+    const e = t.endDate ? fmt(t.endDate) : "\u2026";
+    return s === e ? s : s + " \u2013 " + e;
+  }
+  if (t.startMonth == null && t.endMonth == null) return "Always";
+  const s = MONTHS[(t.startMonth || 1) - 1].label;
+  const e = MONTHS[(t.endMonth || 12) - 1].label;
+  return s === e ? s : s + " \u2013 " + e;
+}
+
+function renderManageRow(t) {
+  return (
+    '<div class="manage-row"><span class="dot" style="background:' + CATEGORIES[t.category].color + '"></span>' +
+    '<div class="manage-main"><div class="manage-label">' + esc(t.label) + "</div>" +
+    '<div class="manage-meta"><span class="chip-static">' + esc(t.recurrence) + "</span>" +
+    '<span class="chip-static">' + (t.inputType === "number" ? "number" + (t.unit ? " \u00b7 " + esc(t.unit) : "") : "check") + "</span>" +
+    '<span class="chip-static">' + esc(windowLabel(t)) + "</span></div></div>" +
+    '<button class="icon-btn" data-action="edit-task" data-id="' + esc(t.id) + '" aria-label="Edit">\u270e</button>' +
+    '<button class="icon-btn danger" data-action="delete-task" data-id="' + esc(t.id) + '" aria-label="Delete">\u2715</button></div>'
+  );
+}
+
+function renderForm() {
+  const f = APP.form.data;
+  const isDaily = f.recurrence === "daily";
+  const isNumber = f.inputType === "number";
+  const isScale = f.inputType === "scale";
+  const isBook = f.inputType === "book";
+  const showTarget = !isBook && f.recurrence !== "daily" && (f.inputType === "check" || f.aggregate === "sum");
+  const always = f.startMonth === "" && f.endMonth === "";
+  const showWeekdayPicker = isDaily && !isBook;
+
+  const dayBtns = WEEKDAYS.map((w) =>
+    '<button type="button" class="wd-btn ' + (f.activeDays && f.activeDays.includes(w.i) ? "on" : "") + '" data-action="toggle-day" data-day="' + w.i + '">' + w.l + "</button>"
+  ).join("");
+  const monthOpts = (sel) => MONTHS.map((m) => '<option value="' + m.n + '" ' + (Number(sel) === m.n ? "selected" : "") + ">" + m.label + "</option>").join("");
+
+  let html = '<div class="form-panel">';
+  html += '<div class="form-row"><label>Label</label><input class="input" data-field="label" value="' + esc(f.label) + '" placeholder="e.g. Drink water"></div>';
+  html += '<div class="form-row"><label>Notes (optional)</label><input class="input" data-field="notes" value="' + esc(f.notes) + '" placeholder="A short helper note"></div>';
+  html += '<div class="form-grid">';
+  html += '<div class="form-row"><label>Category</label><select class="select" data-field="category">' + Object.entries(CATEGORIES).map(([k, v]) => '<option value="' + k + '" ' + (f.category === k ? "selected" : "") + ">" + v.label + "</option>").join("") + "</select></div>";
+  if (!isBook) {
+    html += '<div class="form-row"><label>Recurrence</label><select class="select" data-field="recurrence">' + RECURRENCE_OPTIONS.map((r) => '<option value="' + r + '" ' + (f.recurrence === r ? "selected" : "") + ">" + r + "</option>").join("") + "</select></div>";
+  }
+  html += '<div class="form-row"><label>Input type</label><select class="select" data-field="inputType"><option value="check" ' + (f.inputType === "check" ? "selected" : "") + '>Checkbox</option><option value="number" ' + (f.inputType === "number" ? "selected" : "") + '>Number</option><option value="scale" ' + (isScale ? "selected" : "") + '>Scale (0\u201310 buttons)</option><option value="book" ' + (isBook ? "selected" : "") + ">Book / reading progress</option></select></div>";
+  if (isBook) {
+    html += '<div class="form-row"><label>Start page</label><input class="input" type="number" data-field="bookStart" value="' + esc(f.bookStart) + '" placeholder="1"></div>';
+    html += '<div class="form-row"><label>End page</label><input class="input" type="number" data-field="bookEnd" value="' + esc(f.bookEnd) + '" placeholder="320"></div>';
+    html += '<div class="form-row"><label>Daily nudge step (optional)</label><input class="input" type="number" step="any" data-field="stepSize" value="' + esc(f.stepSize) + '" placeholder="5"></div>';
+  } else {
+    if (isNumber || isScale) {
+      html += '<div class="form-row"><label>Unit (optional)</label><input class="input" data-field="unit" value="' + esc(f.unit) + '" placeholder="e.g. glasses, bpm, /10"></div>';
+      html += '<div class="form-row"><label>Aggregate</label><select class="select" data-field="aggregate"><option value="sum" ' + (f.aggregate === "sum" ? "selected" : "") + '>Sum over period</option><option value="latest" ' + (f.aggregate === "latest" ? "selected" : "") + ">Latest value</option></select></div>";
+    }
+    if (isNumber) html += '<div class="form-row"><label>Step size for +/\u2212 buttons (optional)</label><input class="input" type="number" step="any" data-field="stepSize" value="' + esc(f.stepSize) + '" placeholder="e.g. 1 \u2014 leave blank for keyboard input only"></div>';
+  }
+  if (showTarget) html += '<div class="form-row"><label>Target per period</label><input class="input" type="number" data-field="target" value="' + esc(f.target) + '"></div>';
+  html += "</div>";
+  if (showWeekdayPicker) html += '<div class="form-row"><label>Active weekdays (blank = every day)</label><div class="weekday-picker">' + dayBtns + "</div></div>";
+
+  if (isBook) {
+    html += '<div class="form-row"><label>Reading window</label>';
+    html += '<div class="month-selects" style="margin-top:8px;"><input class="input" type="date" data-field="startDateVal" value="' + esc(f.startDateVal || "") + '" style="width:auto;"><span>to</span><input class="input" type="date" data-field="endDateVal" value="' + esc(f.endDateVal || "") + '" style="width:auto;"></div>';
+    html += '<p class="hint">Started reading \u2192 target finish date. The expected-pace line is calculated across this window.</p>';
+    html += "</div>";
+  } else {
+    html += '<div class="form-row"><label>Active window</label>';
+    html += '<label class="always-check"><input type="checkbox" data-action="toggle-use-dates" ' + (f.useDates ? "checked" : "") + "> Use exact date range instead of months</label>";
+    if (f.useDates) {
+      html += '<div class="month-selects" style="margin-top:8px;"><input class="input" type="date" data-field="startDateVal" value="' + esc(f.startDateVal || "") + '" style="width:auto;"><span>to</span><input class="input" type="date" data-field="endDateVal" value="' + esc(f.endDateVal || "") + '" style="width:auto;"></div>';
+    } else {
+      html += '<div class="month-window" style="margin-top:8px;">';
+      html += '<label class="always-check"><input type="checkbox" data-action="toggle-always" ' + (always ? "checked" : "") + "> Active all year</label>";
+      if (!always) html += '<div class="month-selects"><select class="select" data-field="startMonth">' + monthOpts(f.startMonth) + "</select><span>to</span><select class=\"select\" data-field=\"endMonth\">" + monthOpts(f.endMonth) + "</select></div>";
+      html += "</div>";
+    }
+    html += "</div>";
+  }
+  html += '<div class="form-actions"><button class="btn-secondary" data-action="cancel-form">Cancel</button><button class="btn-primary" data-action="save-form">Save task</button></div>';
+  html += "</div>";
+  return html;
+}
+
+function renderManage() {
+  const filter = APP.manageFilter || "all";
+  const filtered = APP.config.filter((t) => filter === "all" || t.recurrence === filter);
+  const chips = ["all"].concat(RECURRENCE_OPTIONS).map((fl) => '<button class="chip ' + (filter === fl ? "on" : "") + '" data-action="set-filter" data-filter="' + fl + '">' + fl + "</button>").join("");
+  const formHtml = APP.form.open ? renderForm() : "";
+  const rows = filtered.map(renderManageRow).join("");
+  return (
+    '<section class="section"><div class="section-head"><span class="section-title">MANAGE TASKS</span></div>' +
+    '<div class="filter-row">' + chips + '<button class="btn-primary add-btn" data-action="add-task">+ Add task</button></div>' +
+    formHtml +
+    '<div class="rows">' + rows + "</div></section>"
+  );
+}
+
+/* ============================== MASTER RENDER ============================== */
+
+function updateTabButtons() {
+  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.getAttribute("data-tab") === APP.tab));
+}
+
+function render() {
+  updateTabButtons();
+  const root = document.getElementById("root");
+  if (!APP.ready) { root.innerHTML = '<p class="empty">Loading your log…</p>'; return; }
+  if (APP.tab === "today") root.innerHTML = renderToday();
+  else if (APP.tab === "workout") root.innerHTML = renderWorkout();
+  else if (APP.tab === "week") root.innerHTML = renderWeek();
+  else if (APP.tab === "month") root.innerHTML = renderMonth();
+  else if (APP.tab === "trends") root.innerHTML = renderTrends();
+  else root.innerHTML = renderManage();
+}
+
+/* ============================== MUTATIONS ============================== */
+
+function setSaveStatus(text) { const el = document.getElementById("save-status"); if (el) el.textContent = text; }
+
+const RETRY_DELAYS = [600, 1500]; // ms before retry attempt 2 and attempt 3
+
+function doPersist(dateKey, taskId, value, attempt) {
+  attempt = attempt || 1;
+  google.script.run
+    .withSuccessHandler(() => setSaveStatus("saved"))
+    .withFailureHandler((err) => {
+      if (attempt < 3) {
+        setSaveStatus("retrying…");
+        setTimeout(() => doPersist(dateKey, taskId, value, attempt + 1), RETRY_DELAYS[attempt - 1]);
+      } else {
+        setSaveStatus("save failed — edit it again to retry");
+        console.error("setEntry failed after retries:", err);
+      }
+    })
+    .setEntry(dateKey, taskId, value);
+}
+const saveTimers = {};
+function debouncedPersist(dateKey, taskId, value) {
+  const key = dateKey + "|" + taskId;
+  if (saveTimers[key]) clearTimeout(saveTimers[key].t);
+  setSaveStatus("saving…");
+  saveTimers[key] = { t: setTimeout(() => doPersist(dateKey, taskId, value), 500), value: value };
+}
+function flushPersist(dateKey, taskId) {
+  const key = dateKey + "|" + taskId;
+  if (saveTimers[key]) { clearTimeout(saveTimers[key].t); const value = saveTimers[key].value; delete saveTimers[key]; doPersist(dateKey, taskId, value); }
+}
+function persistEntryNow(dateKey, taskId, value) { setSaveStatus("saving…"); doPersist(dateKey, taskId, value); }
+
+function toggleTask(dateKey, taskId) {
+  if (!APP.log[dateKey]) APP.log[dateKey] = {};
+  const cur = !!APP.log[dateKey][taskId];
+  APP.log[dateKey][taskId] = !cur;
+  persistEntryNow(dateKey, taskId, !cur);
+  render();
+}
+function togglePeriod(taskId, recurrence, pillKey, controlKey) {
+  const keys = periodKeysFor(recurrence, parseKey(pillKey));
+  const entryDates = keys.filter((k) => APP.log[k] && APP.log[k][taskId]);
+  if (entryDates.length > 0) {
+    // Already satisfied somewhere in this period — unchecking clears every entry in it,
+    // since there's no single "the" day to unset for a once-per-period task.
+    setSaveStatus("saving…");
+    entryDates.forEach((k) => {
+      delete APP.log[k][taskId];
+      doPersist(k, taskId, null);
+    });
+  } else {
+    if (!APP.log[controlKey]) APP.log[controlKey] = {};
+    APP.log[controlKey][taskId] = true;
+    persistEntryNow(controlKey, taskId, true);
+  }
+  render();
+}
+function liveNumberUpdate(dateKey, taskId, raw) {
+  if (!APP.log[dateKey]) APP.log[dateKey] = {};
+  if (raw === "") { delete APP.log[dateKey][taskId]; debouncedPersist(dateKey, taskId, null); }
+  else { const num = Number(raw); if (!isNaN(num)) { APP.log[dateKey][taskId] = num; debouncedPersist(dateKey, taskId, num); } }
+}
+function commitNumber(dateKey, taskId, raw) { liveNumberUpdate(dateKey, taskId, raw); flushPersist(dateKey, taskId); }
+
+function stepNumber(dateKey, taskId, delta) {
+  let cur;
+  if (APP.log[dateKey] && APP.log[dateKey][taskId] != null && APP.log[dateKey][taskId] !== "") {
+    cur = Number(APP.log[dateKey][taskId]);
+  } else {
+    const task = APP.config.find((t) => t.id === taskId);
+    if (task && task.inputType === "book") {
+      const last = latestBookValueAsOf(taskId, dateKey);
+      cur = last != null ? last : (task.bookStart != null ? Number(task.bookStart) : 0);
+    } else {
+      cur = 0;
+    }
+  }
+  let next = cur + Number(delta);
+  if (next < 0) next = 0;
+  next = Math.round(next * 100) / 100;
+  liveNumberUpdate(dateKey, taskId, String(next));
+  flushPersist(dateKey, taskId);
+  render();
+}
+function setScale(dateKey, taskId, value) {
+  if (!APP.log[dateKey]) APP.log[dateKey] = {};
+  const num = Number(value);
+  const cur = APP.log[dateKey][taskId];
+  if (cur === num) { delete APP.log[dateKey][taskId]; persistEntryNow(dateKey, taskId, null); }
+  else { APP.log[dateKey][taskId] = num; persistEntryNow(dateKey, taskId, num); }
+  render();
+}
+
+function openBookRangeEditor(parentId) {
+  const companion = findBookProgressTask(parentId);
+  APP.editingBookRangeFor = parentId;
+  APP.bookRangeForm = companion
+    ? { start: companion.bookStart != null ? companion.bookStart : "", end: companion.bookEnd != null ? companion.bookEnd : "" }
+    : { start: "", end: "" };
+}
+function cancelBookRangeEditor() {
+  APP.editingBookRangeFor = null;
+}
+function saveBookRange(parentId) {
+  const parent = APP.config.find((t) => t.id === parentId);
+  if (!parent) return;
+  const form = APP.bookRangeForm;
+  if (form.start === "" || form.end === "" || isNaN(Number(form.start)) || isNaN(Number(form.end))) {
+    alert("Enter both a start and an end value.");
+    return;
+  }
+  let start, end;
+  if (parent.startDate && parent.endDate) {
+    start = parent.startDate;
+    end = parent.endDate;
+  } else {
+    const rm = parent.startMonth || roadmapMonthOf(startOfDay(new Date()));
+    ({ start, end } = roadmapMonthCalendarRange(rm));
+  }
+  const progressId = bookProgressIdFor(parentId);
+  const cleanLabel = parent.label.replace(/^Read:\s*/i, "").replace(/^FN[\w-]*\s*book:\s*/i, "");
+  const companion = {
+    id: progressId,
+    label: cleanLabel,
+    category: parent.category,
+    recurrence: "daily",
+    inputType: "book",
+    bookMode: "pages",
+    bookStart: Number(form.start),
+    bookEnd: Number(form.end),
+    unit: "pg",
+    aggregate: "latest",
+    step: 5,
+    startDate: start,
+    endDate: end,
+  };
+  const existingIdx = APP.config.findIndex((t) => t.id === progressId);
+  if (existingIdx > -1) APP.config[existingIdx] = companion;
+  else APP.config = APP.config.concat([companion]);
+  APP.editingBookRangeFor = null;
+  persistConfig();
+  render();
+}
+function stopBookTracking(parentId) {
+  if (!confirm("Stop tracking this book's progress? Logged percentages stay in the Sheet but won't show in the app.")) return;
+  const progressId = bookProgressIdFor(parentId);
+  APP.config = APP.config.filter((t) => t.id !== progressId);
+  persistConfig();
+  render();
+}
+
+function persistConfig(attempt) {
+  attempt = attempt || 1;
+  if (attempt === 1) setSaveStatus("saving…");
+  google.script.run
+    .withSuccessHandler(() => setSaveStatus("saved"))
+    .withFailureHandler((err) => {
+      if (attempt < 3) {
+        setSaveStatus("retrying…");
+        setTimeout(() => persistConfig(attempt + 1), RETRY_DELAYS[attempt - 1]);
+      } else {
+        setSaveStatus("save failed — try editing again");
+        console.error("saveConfig failed after retries:", err);
+      }
+    })
+    .saveConfig(APP.config);
+}
+function openAddForm() { APP.form = { open: true, editingId: null, data: Object.assign({}, EMPTY_FORM) }; }
+function openEditForm(id) {
+  const t = APP.config.find((x) => x.id === id);
+  if (!t) return;
+  const hasDates = !!(t.startDate || t.endDate);
+  APP.form = {
+    open: true, editingId: id,
+    data: {
+      label: t.label, notes: t.notes || "", category: t.category, recurrence: t.recurrence, inputType: t.inputType,
+      unit: t.unit || "", target: t.target || 1, aggregate: t.aggregate || "sum", stepSize: t.step != null ? t.step : "",
+      activeDays: t.activeDays ? t.activeDays.slice() : null,
+      useDates: hasDates,
+      startDateVal: t.startDate || "", endDateVal: t.endDate || "",
+      startMonth: !hasDates && t.startMonth != null ? t.startMonth : "",
+      endMonth: !hasDates && t.endMonth != null ? t.endMonth : "",
+      bookMode: t.bookMode || "percent",
+      bookStart: t.bookStart != null ? t.bookStart : "",
+      bookEnd: t.bookEnd != null ? t.bookEnd : "",
+    },
+  };
+}
+function toggleFormDay(day) {
+  const f = APP.form.data;
+  const cur = f.activeDays || [];
+  f.activeDays = cur.includes(day) ? cur.filter((x) => x !== day) : cur.concat([day]);
+}
+function saveForm() {
+  const f = APP.form.data;
+  if (!f.label || !String(f.label).trim()) { alert("Please enter a label."); return; }
+  const clean = { id: APP.form.editingId || uid(), label: String(f.label).trim(), category: f.category, recurrence: f.recurrence, inputType: f.inputType };
+  if (f.notes && String(f.notes).trim()) clean.notes = String(f.notes).trim();
+
+  if (f.inputType === "book") {
+    if (!f.startDateVal || !f.endDateVal) { alert("Book tracking needs both a start date and a target finish date."); return; }
+    clean.recurrence = "daily";
+    clean.bookMode = "pages";
+    clean.bookStart = f.bookStart === "" || f.bookStart == null ? 1 : Number(f.bookStart);
+    clean.bookEnd = f.bookEnd === "" || f.bookEnd == null ? 100 : Number(f.bookEnd);
+    clean.unit = "pg";
+    clean.aggregate = "latest";
+    clean.startDate = f.startDateVal;
+    clean.endDate = f.endDateVal;
+    clean.step = f.stepSize !== "" && f.stepSize != null && !isNaN(Number(f.stepSize)) ? Number(f.stepSize) : 5;
+  } else {
+    if (f.inputType === "number" || f.inputType === "scale") {
+      if (f.unit && String(f.unit).trim()) clean.unit = String(f.unit).trim();
+      clean.aggregate = f.aggregate || "sum";
+    }
+    if (f.inputType === "number" && f.stepSize !== "" && f.stepSize != null && !isNaN(Number(f.stepSize))) clean.step = Number(f.stepSize);
+    if (f.recurrence !== "daily" && (f.inputType === "check" || clean.aggregate === "sum")) clean.target = Number(f.target) || 1;
+    if (f.recurrence === "daily" && f.activeDays && f.activeDays.length > 0) clean.activeDays = f.activeDays.slice();
+    if (f.useDates) {
+      if (f.startDateVal) clean.startDate = f.startDateVal;
+      if (f.endDateVal) clean.endDate = f.endDateVal;
+    } else if (f.startMonth !== "" && f.endMonth !== "" && f.startMonth != null && f.endMonth != null) {
+      clean.startMonth = Number(f.startMonth);
+      clean.endMonth = Number(f.endMonth);
+    }
+  }
+
+  if (APP.form.editingId) APP.config = APP.config.map((t) => (t.id === APP.form.editingId ? clean : t));
+  else APP.config = APP.config.concat([clean]);
+  APP.form.open = false;
+  persistConfig();
+  render();
+}
+function deleteTask(id) {
+  if (!confirm("Delete this task? Past log entries for it stay in the sheet but won't show in the app.")) return;
+  APP.config = APP.config.filter((t) => t.id !== id);
+  persistConfig();
+  render();
+}
+
+/* ============================== EVENTS ============================== */
+
+function onClick(e) {
+  const tabBtn = e.target.closest("[data-tab]");
+  if (tabBtn) { APP.tab = tabBtn.getAttribute("data-tab"); render(); return; }
+
+  const actionEl = e.target.closest("[data-action]");
+  if (!actionEl) return;
+  const action = actionEl.getAttribute("data-action");
+
+  if (action === "toggle-mve") { APP.mveMode = !APP.mveMode; render(); }
+  else if (action === "enter-mve") { APP.mveMode = true; render(); }
+  else if (action === "prev-day") { APP.selected = addDays(APP.selected, -1); render(); }
+  else if (action === "next-day") { APP.selected = addDays(APP.selected, 1); render(); }
+  else if (action === "jump-today") { APP.selected = new Date(); render(); }
+  else if (action === "prev-week") { APP.selected = addDays(APP.selected, -7); render(); }
+  else if (action === "next-week") { APP.selected = addDays(APP.selected, 7); render(); }
+  else if (action === "jump-week") { APP.selected = new Date(); render(); }
+  else if (action === "prev-month") { const d = APP.selected; APP.selected = new Date(d.getFullYear(), d.getMonth() - 1, 1); render(); }
+  else if (action === "next-month") { const d = APP.selected; APP.selected = new Date(d.getFullYear(), d.getMonth() + 1, 1); render(); }
+  else if (action === "jump-month") { APP.selected = new Date(); render(); }
+  else if (action === "set-filter") { APP.manageFilter = actionEl.getAttribute("data-filter"); render(); }
+  else if (action === "add-task") { openAddForm(); render(); }
+  else if (action === "add-book-shortcut") {
+    APP.tab = "manage";
+    openAddForm();
+    APP.form.data.inputType = "book";
+    APP.form.data.category = "learning";
+    render();
+  }
+  else if (action === "open-book-range") { openBookRangeEditor(actionEl.getAttribute("data-parent")); render(); }
+  else if (action === "cancel-book-range") { cancelBookRangeEditor(); render(); }
+  else if (action === "save-book-range") { saveBookRange(actionEl.getAttribute("data-parent")); }
+  else if (action === "stop-book-tracking") { stopBookTracking(actionEl.getAttribute("data-parent")); }
+  else if (action === "edit-task") { openEditForm(actionEl.getAttribute("data-id")); render(); }
+  else if (action === "delete-task") { deleteTask(actionEl.getAttribute("data-id")); }
+  else if (action === "cancel-form") { APP.form.open = false; render(); }
+  else if (action === "save-form") { saveForm(); }
+  else if (action === "toggle-day") { toggleFormDay(Number(actionEl.getAttribute("data-day"))); render(); }
+  else if (action === "step") { stepNumber(actionEl.getAttribute("data-date"), actionEl.getAttribute("data-task"), Number(actionEl.getAttribute("data-delta"))); }
+  else if (action === "scale") { setScale(actionEl.getAttribute("data-date"), actionEl.getAttribute("data-task"), actionEl.getAttribute("data-value")); }
+}
+
+function onChange(e) {
+  const el = e.target;
+  if (el.matches('[data-action="toggle"]')) { toggleTask(el.getAttribute("data-date"), el.getAttribute("data-task")); return; }
+  if (el.matches('[data-action="toggle-period"]')) { togglePeriod(el.getAttribute("data-task"), el.getAttribute("data-recurrence"), el.getAttribute("data-pillkey"), el.getAttribute("data-date")); return; }
+  if (el.matches('[data-action="number"]')) { commitNumber(el.getAttribute("data-date"), el.getAttribute("data-task"), el.value); render(); return; }
+  if (el.matches('[data-action="toggle-always"]')) {
+    if (el.checked) { APP.form.data.startMonth = ""; APP.form.data.endMonth = ""; }
+    else { APP.form.data.startMonth = 1; APP.form.data.endMonth = 12; }
+    render(); return;
+  }
+  if (el.matches('[data-action="toggle-use-dates"]')) { APP.form.data.useDates = el.checked; render(); return; }
+  if (el.matches('[data-action="metric-select"]')) { APP.trendsMetricId = el.value; render(); return; }
+  if (el.matches('[data-action="toggle-trends-avg"]')) { APP.trendsShowAvg = el.checked; render(); return; }
+  if (el.hasAttribute("data-bookrange-field")) {
+    APP.bookRangeForm[el.getAttribute("data-bookrange-field")] = el.value;
+    if (el.tagName === "SELECT") render();
+    return;
+  }
+  if (el.hasAttribute("data-field")) {
+    const field = el.getAttribute("data-field");
+    let val = el.value;
+    if (field === "target" || field === "startMonth" || field === "endMonth") val = Number(val);
+    APP.form.data[field] = val;
+    if (el.tagName === "SELECT") render();
+  }
+}
+
+function onInput(e) {
+  const el = e.target;
+  if (el.matches('[data-action="number"]')) { liveNumberUpdate(el.getAttribute("data-date"), el.getAttribute("data-task"), el.value); return; }
+  if (el.hasAttribute("data-bookrange-field")) { APP.bookRangeForm[el.getAttribute("data-bookrange-field")] = el.value; return; }
+  if (el.tagName === "INPUT" && el.hasAttribute("data-field")) { APP.form.data[el.getAttribute("data-field")] = el.value; }
+}
+
+/* ============================== INIT ============================== */
+
+function onDataLoaded(data) {
+  APP.config = data.config || [];
+  APP.log = data.log || {};
+  APP.ready = true;
+  setSaveStatus("");
+  render();
+}
+function onLoadError(err) {
+  document.getElementById("root").innerHTML = '<p class="empty">Couldn\u2019t load data (' + esc((err && err.message) || err) + '). Reload the page to try again.</p>';
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("app").addEventListener("click", onClick);
+  document.getElementById("app").addEventListener("change", onChange);
+  document.getElementById("app").addEventListener("input", onInput);
+  setSaveStatus("loading…");
+  google.script.run.withSuccessHandler(onDataLoaded).withFailureHandler(onLoadError).getAppData();
+});
+</script>
+</body>
+</html>
