@@ -304,7 +304,7 @@ Event: `{id, pageUrl, batch: {entries}, evidencePath?, chunk?, repair?, deadline
 
 The user already clicked Apply. Do not ask what to do, discard, or redirect to Go. The parent live thread keeps the foreground poll loop and sends the final `/poll --reply --data`.
 
-When native subagents are available, delegate source edits to `impeccable_manual_edit_applier` / `impeccable-manual-edit-applier`. Pass cwd, scripts path, event id, page URL, chunk/deadline, `batch`, `evidencePath`, and the canonical JSON result schema. The subagent must not poll or reply. If unavailable, apply inline with the same contract.
+When native subagents are available, delegate source edits to `impeccable_manual_edit_applier` / `impeccable-manual-edit-applier` (in Claude Code, a general-purpose subagent briefed with [degraded/manual-edit-applier.md](degraded/manual-edit-applier.md), skipping its opening paragraph about running inline). Pass cwd, scripts path, event id, page URL, chunk/deadline, `batch`, `evidencePath`, and the canonical JSON result schema. The subagent must not poll or reply. If unavailable, apply inline with the same contract.
 
 An op with `deleted: true` and `removeElement: true` is the browser's Remove badge: delete that whole element from source, children included, not just its text. Locate it by `sourceHint`, then by `leaf.outerHTML` and `originalText`, and remove exactly that element's source range; leave no empty wrapper, orphaned children, or dangling markup behind.
 
